@@ -2,30 +2,36 @@
 #include <curses.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <unistd.h>
 #include <signal.h>
 #include <termios.h>
 #include <sys/time.h>
+#include <math.h>
 
-
-#define LEFTEDGE 30
-#define RIGHTEDGE 60
+#define TRUE 1
+#define FALSE 0
+#define LEFTEDGE 20
+#define RIGHTEDGE 80
 #define TIMEVAL 40
 
 int dir = 1;
 int pos = LEFTEDGE;
 int FLOOR = 20;
-char blank[] = "     ";
+char blank[] = "        ";
+double arrCenterX[100];
+int numStackedBlocks = 0;
 
 void sig_handler();
 int set_ticker(int n_msecs);
 void set_cr_noecho_mode();
 void stack_tower();	// 탑이 밑으로 쌓이는 과정
-
+int can_stack(double);
 
 int main()
 {
 	char c;
+    char collapsed[] = "Tower is collapsed!!! You failed...";
 	initscr();
 	set_cr_noecho_mode();
 	clear();
@@ -45,6 +51,13 @@ int main()
 			case ' ':
 				set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
 				stack_tower();
+                if(!can_stack((double)pos))
+                {
+                    signal(SIGALRM, SIG_IGN);
+                    clear();
+                    mvaddstr(LINES/2, (COLS-strlen(collapsed))/2, collapsed);
+                    refresh(); 
+                }
 				FLOOR -= 1;
                 pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 				set_ticker(TIMEVAL);
@@ -56,7 +69,30 @@ int main()
 	}
 }
 
+int can_stack(double leftX)
+{
+    double curCenterX, centerX;
+    
+    curCenterX = leftX + (double)strlen(blank)/2;
+    centerX = 0;
 
+    for(int i = numStackedBlocks; i > 0; i--)
+    {
+        double tempCenterX;
+        if(i == numStackedBlocks)
+            tempCenterX = ((numStackedBlocks - i) * centerX + curCenterX) / (numStackedBlocks - i + 1);
+        else
+            tempCenterX = ((numStackedBlocks - i) * centerX + arrCenterX[i+1]) / (numStackedBlocks - i + 1);
+
+        if(fabs(tempCenterX - arrCenterX[i]) > strlen(blank)/2)
+            return FALSE;
+
+        centerX = tempCenterX;
+    }
+    numStackedBlocks++;
+    arrCenterX[numStackedBlocks] = curCenterX;
+    return TRUE;
+}
 void sig_handler()
 {	
 	move(0, pos);
