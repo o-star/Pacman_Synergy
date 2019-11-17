@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <curses.h>
+#include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 #include <signal.h>
 #include <termios.h>
@@ -30,7 +32,7 @@ int main()
 	
 
 	signal(SIGALRM, sig_handler);
-	
+    srand(time(NULL));
 	
 	if(set_ticker(TIMEVAL) == -1)
 		perror("set_ticker");
@@ -44,6 +46,7 @@ int main()
 				stack_tower();
 				FLOOR -= 1;
 				set_ticker(TIMEVAL);
+                pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 				break;
 			case 'q':
 				endwin();
