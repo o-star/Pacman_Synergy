@@ -66,7 +66,7 @@ void sig_handler()
 	move(0, pos);
 	standout();
 	addstr(blank);
-	move(LINES-1, COLS-1);
+    curs_set(0);
 	refresh();
 }
 
@@ -112,7 +112,7 @@ void stack_tower()
 		move(row_pos,pos);
 		standout();
 		addstr(blank);
-		move(LINES-1, COLS-1);
+        curs_set(0);
 		refresh();
 		usleep(50000);		// 1초 미만 쉬어줄때 사용
 
