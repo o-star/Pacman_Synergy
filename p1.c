@@ -39,14 +39,15 @@ int main()
 	
 	
 	while(1){
+        flushinp();
 		c = getchar();
 		switch(c){
 			case ' ':
 				set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
 				stack_tower();
 				FLOOR -= 1;
-				set_ticker(TIMEVAL);
                 pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+				set_ticker(TIMEVAL);
 				break;
 			case 'q':
 				endwin();
