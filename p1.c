@@ -1,3 +1,6 @@
+// 확인용
+
+
 #include <stdio.h>
 #include <curses.h>
 #include <stdlib.h>
