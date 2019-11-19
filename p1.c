@@ -1,6 +1,3 @@
-// 확인용
-
-
 #include <stdio.h>
 #include <curses.h>
 #include <stdlib.h>
@@ -35,84 +32,94 @@ void view_stack_cnt();
 int main()
 {
 	char c;
-    char collapsed[] = "Tower is collapsed!!! You failed...";
+	char collapsed[] = "Tower is collapsed!!! You failed...";
+    char collapsed2[30];
 	initscr();
 	set_cr_noecho_mode();
 	clear();
-	
+
 
 	signal(SIGALRM, sig_handler);
-    srand(time(NULL));
-	
-	if(set_ticker(TIMEVAL) == -1)
+	srand(time(NULL));
+
+	if (set_ticker(TIMEVAL) == -1)
 		perror("set_ticker");
-	
-	
-	while(1){
-        flushinp();
+
+
+	while (1) {
+		flushinp();
 		c = getchar();
-		switch(c){
-			case ' ':
-				set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
-				stack_tower();
-                if(!can_stack((double)pos))
-                {
-                    signal(SIGALRM, SIG_IGN);
-                    clear();
-                    mvaddstr(LINES/2, (COLS-strlen(collapsed))/2, collapsed);
-                    refresh(); 
-                }
-				FLOOR -= 1;
-                pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
-				set_ticker(TIMEVAL);
-				break;
+		switch (c) {
+		case ' ': // spaec bar를 눌렸을때, 실행
+
+			set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
+			stack_tower();
+			if (!can_stack((double)pos))
+			{
+				signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
+				clear(); // 화면 없애기
+                sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
+				mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
+                mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
+                refresh();
 				sleep(2);
                 endwin();
-			case 'q':
-				endwin();
-				return 0;
+                return 0;
+			}
+
+			FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
+			pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+
+			set_ticker(TIMEVAL);
+			break;
+
+		case 'q':
+			endwin();
+			return 0;
 		}
 	}
 }
 
 int can_stack(double leftX)
 {
-    double curCenterX, centerX;
-    
-    curCenterX = leftX + (double)strlen(blank)/2;
-    centerX = 0;
+	double curCenterX, centerX;
 
-    for(int i = numStackedBlocks; i > 0; i--)
-    {
-        double tempCenterX;
-        if(i == numStackedBlocks)
-            tempCenterX = ((numStackedBlocks - i) * centerX + curCenterX) / (numStackedBlocks - i + 1);
-        else
-            tempCenterX = ((numStackedBlocks - i) * centerX + arrCenterX[i+1]) / (numStackedBlocks - i + 1);
+	curCenterX = leftX + (double)strlen(blank) / 2;
+	centerX = 0;
 
-        if(fabs(tempCenterX - arrCenterX[i]) > strlen(blank)/2)
-            return FALSE;
+	for (int i = numStackedBlocks; i > 0; i--)
+	{
+		double tempCenterX;
+		if (i == numStackedBlocks)
+			tempCenterX = ((numStackedBlocks - i) * centerX + curCenterX) / (numStackedBlocks - i + 1);
+		else
+			tempCenterX = ((numStackedBlocks - i) * centerX + arrCenterX[i + 1]) / (numStackedBlocks - i + 1);
 
-        centerX = tempCenterX;
-    }
-    numStackedBlocks++;
-    arrCenterX[numStackedBlocks] = curCenterX;
-    return TRUE;
+		if (fabs(tempCenterX - arrCenterX[i]) > strlen(blank) / 2)
+			return FALSE;
+
+		centerX = tempCenterX;
+	}
+	numStackedBlocks++;
+	arrCenterX[numStackedBlocks] = curCenterX;
+	return TRUE;
 }
-void sig_handler()
-{	
+void sig_handler() // 블럭이 좌우로 움직이는 구간
+{
 	move(0, pos);
 	standend();
 	addstr(blank);
 	pos += dir;
-	if(pos>=RIGHTEDGE)
+	if (pos >= RIGHTEDGE)
 		dir = -1;
-	if(pos<=LEFTEDGE)
+	if (pos <= LEFTEDGE)
 		dir = +1;
 	move(0, pos);
 	standout();
 	addstr(blank);
-    curs_set(0);
+	
+	view_stack_cnt();
+	curs_set(0);
 	refresh();
 }
 
@@ -166,9 +173,9 @@ void stack_tower()
 		move(row_pos, pos);
 		standout();
 		addstr(blank);
-        curs_set(0);
+		curs_set(0);
 		refresh();
-		usleep(50000);		// 1�� �̸� �����ٶ� ���
+		usleep(50000);		// 1초 미만 쉬어줄때 사용
 
 		if (row_pos == FLOOR)
 			break;
