@@ -1,75 +1,125 @@
 #include <stdio.h>
 #include <curses.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
 #include <unistd.h>
 #include <signal.h>
 #include <termios.h>
 #include <sys/time.h>
+#include <math.h>
 
-
-#define LEFTEDGE 30
-#define RIGHTEDGE 60
+#define TRUE 1
+#define FALSE 0
+#define LEFTEDGE 20
+#define RIGHTEDGE 80
 #define TIMEVAL 40
 
 int dir = 1;
 int pos = LEFTEDGE;
 int FLOOR = 20;
-char blank[] = "     ";
+char blank[] = "        ";
+double arrCenterX[100];
+int numStackedBlocks = 0;
 
 void sig_handler();
 int set_ticker(int n_msecs);
 void set_cr_noecho_mode();
-void stack_tower();	// íƒ‘ì´ ë°‘ìœ¼ë¡œ ìŒ“ì´ëŠ” ê³¼ì •
+void stack_tower();	// Å¾ÀÌ ¹ØÀ¸·Î ½×ÀÌ´Â °úÁ¤
+int can_stack(double);
 void view_stack_cnt();
-
 
 int main()
 {
 	char c;
+	char collapsed[] = "Tower is collapsed!!! You failed...";
+    char collapsed2[30];
 	initscr();
 	set_cr_noecho_mode();
 	clear();
-	
+
 
 	signal(SIGALRM, sig_handler);
-	
-	
-	if(set_ticker(TIMEVAL) == -1)
+	srand(time(NULL));
+
+	if (set_ticker(TIMEVAL) == -1)
 		perror("set_ticker");
-	
-	
-	while(1){
+
+
+	while (1) {
+		flushinp();
 		c = getchar();
-		switch(c){
-			case ' ':
-				set_ticker(2000); // íƒ‘ì´ ë‹¤ ë–¨ì–´ì§ˆë•Œ ê¹Œì§€ì˜ ì‹œê°„ ë©ˆì¶°ë‘ëŠ”ê²ƒ
-				stack_tower();
-				FLOOR -= 1;
-				set_ticker(TIMEVAL);
-				break;
+		switch (c) {
+		case ' ': // spaec bar¸¦ ´­·ÈÀ»¶§, ½ÇÇà
+
+			set_ticker(2000); // Å¾ÀÌ ´Ù ¶³¾îÁú¶§ ±îÁöÀÇ ½Ã°£ ¸ØÃçµÎ´Â°Í
+			stack_tower();
+			if (!can_stack((double)pos))
+			{
+				signal(SIGALRM, SIG_IGN); // ¹«½ÃµÇ¸é, ´õÀÌ»ó ºí·°ÀÌ ¿òÁ÷ÀÌÁö ¾Ê°Ô µÈ´Ù.
+				clear(); // È­¸é ¾ø¾Ö±â
+                sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
+				mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
+                mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
+                refresh();
 				sleep(2);
                 endwin();
-			case 'q':
-				endwin();
-				return 0;
+                return 0;
+			}
+
+			FLOOR -= 1; // ÇÑÃþÀÌ ½×¿´À¸´Ï±ñ, FLOOR -1À» ½ÃÅ²´Ù.
+			pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+
+			set_ticker(TIMEVAL);
+			break;
+
+		case 'q':
+			endwin();
+			return 0;
 		}
 	}
 }
 
+int can_stack(double leftX)
+{
+	double curCenterX, centerX;
 
-void sig_handler()
-{	
+	curCenterX = leftX + (double)strlen(blank) / 2;
+	centerX = 0;
+
+	for (int i = numStackedBlocks; i > 0; i--)
+	{
+		double tempCenterX;
+		if (i == numStackedBlocks)
+			tempCenterX = ((numStackedBlocks - i) * centerX + curCenterX) / (numStackedBlocks - i + 1);
+		else
+			tempCenterX = ((numStackedBlocks - i) * centerX + arrCenterX[i + 1]) / (numStackedBlocks - i + 1);
+
+		if (fabs(tempCenterX - arrCenterX[i]) > strlen(blank) / 2)
+			return FALSE;
+
+		centerX = tempCenterX;
+	}
+	numStackedBlocks++;
+	arrCenterX[numStackedBlocks] = curCenterX;
+	return TRUE;
+}
+void sig_handler() // ºí·°ÀÌ ÁÂ¿ì·Î ¿òÁ÷ÀÌ´Â ±¸°£
+{
 	move(0, pos);
 	standend();
 	addstr(blank);
 	pos += dir;
-	if(pos>=RIGHTEDGE)
+	if (pos >= RIGHTEDGE)
 		dir = -1;
-	if(pos<=LEFTEDGE)
+	if (pos <= LEFTEDGE)
 		dir = +1;
 	move(0, pos);
 	standout();
 	addstr(blank);
-	move(LINES-1, COLS-1);
+	
+	view_stack_cnt();
+	curs_set(0);
 	refresh();
 }
 
@@ -125,7 +175,7 @@ void stack_tower()
 		addstr(blank);
 		curs_set(0);
 		refresh();
-		usleep(50000);		// 1ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½ ï¿½ï¿½ï¿½
+		usleep(50000);		// 1ÃÊ ¹Ì¸¸ ½¬¾îÁÙ¶§ »ç¿ë
 
 		if (row_pos == FLOOR)
 			break;
