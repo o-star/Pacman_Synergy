@@ -30,6 +30,7 @@ int set_ticker(int n_msecs);
 void set_cr_noecho_mode();
 void stack_tower();	// 탑이 밑으로 쌓이는 과정
 int can_stack(double);
+void view_stack_cnt();
 
 int main()
 {
@@ -65,6 +66,8 @@ int main()
                 pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 				set_ticker(TIMEVAL);
 				break;
+				sleep(2);
+                endwin();
 			case 'q':
 				endwin();
 				return 0;
@@ -113,6 +116,13 @@ void sig_handler()
 	refresh();
 }
 
+void view_stack_cnt() {
+
+	char stack_cnt_string[100];
+	sprintf(stack_cnt_string, "Stacked block : %d ", numStackedBlocks);
+	mvaddstr(30, RIGHTEDGE+10, stack_cnt_string);
+
+}
 int set_ticker(int n_msecs)
 {
 	struct itimerval new_timeset;
@@ -143,23 +153,24 @@ void set_cr_noecho_mode()
 void stack_tower()
 {
 	int row_pos = 0;
-	
 
-	while(1){
-		move(row_pos,pos);
+
+	while (1) {
+		move(row_pos, pos);
 		standend();
+
 		addstr(blank);
-		
+
 		row_pos += 1;
 
-		move(row_pos,pos);
+		move(row_pos, pos);
 		standout();
 		addstr(blank);
         curs_set(0);
 		refresh();
-		usleep(50000);		// 1초 미만 쉬어줄때 사용
+		usleep(50000);		// 1�� �̸� �����ٶ� ���
 
-		if(row_pos == FLOOR)
+		if (row_pos == FLOOR)
 			break;
 	}
 }
