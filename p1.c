@@ -46,6 +46,7 @@ char* borderary[TOWERBOTTOM+1] = {
 int dir = 1;
 int pos = LEFTEDGE;
 int FLOOR = TOWERBOTTOM;
+int flags = TRUE;
 char blank[] = "        ";
 double arrCenterX[100];     //블럭의 무게중심 x좌표들의 배열(인덱스는몇번쨰 블럭인지)
 int arrBlockPosition[100];  //블럭의 왼쪽끝 x좌표들의 배열(인덱스는 몇번째 블럭인지)
@@ -59,6 +60,7 @@ int can_stack(double);          //탑이 무너지지않게 블럭을 쌓을 수
 void view_stack_cnt();          
 void move_tower_down();         //화면에 일정 개수의 블럭이 쌓이면 탑을 아래로 내려줌 
 void scretch_bolder();		// 게임 창의 테투리 출력
+void reduce_speed(int*);
 
 int main()
 {
@@ -111,11 +113,20 @@ int main()
 
 			pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 			set_ticker(TIMEVAL);
+			flags=TRUE;
 			break;
 
 		case 'q':
 			endwin();
 			return 0;
+
+		case 'r': // r을 누르면 블럭속도가 줄어든다 한게임당 2번까지 가능
+            if(flags){ // 블럭을 떨어뜨리기전에 r을 두번눌렀을 때 , 아이템 갯수가 사라지는 것을 방지하기 위한 flags
+             reduce_speed(&reduce_speed_item_cnt);
+            }
+            break;
+		}
+
 		}
 	}
 }
@@ -133,6 +144,17 @@ void move_tower_down(void)
         mvaddstr(row, arrBlockPosition[idx], blank);
     
     refresh();
+}
+
+void reduce_speed(int *item_cnt){
+
+    int move_speed=70;
+
+    if(*item_cnt>0){
+        (*item_cnt)--;
+        set_ticker(move_speed);
+        flags=FALSE;
+    }
 }
 
 int can_stack(double leftX)
