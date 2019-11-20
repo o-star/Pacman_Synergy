@@ -13,12 +13,12 @@
 #define FALSE 0
 #define LEFTEDGE 20
 #define RIGHTEDGE 80
-#define TIMEVAL 40
+#define TIMEVAL 60
 #define TOWERBOTTOM 20     //화면에서의 제일 아래 블럭 y축위치
-#define MAXVIEWEDBLOCKS 4  //게임중 화면에 보여질 블럭의 개수
+#define MAXVIEWEDBLOCKS 8  //게임중 화면에 보여질 블럭의 개수
 
 int dir = 1;
-int pos = LEFTEDGE;
+int pos;
 int FLOOR = TOWERBOTTOM;
 char blank[] = "        ";
 double arrCenterX[100];     //블럭의 무게중심 x좌표들의 배열(인덱스는몇번쨰 블럭인지)
@@ -42,14 +42,13 @@ int main()
 	set_cr_noecho_mode();
 	clear();
 
-
 	signal(SIGALRM, sig_handler);
 	srand(time(NULL));
 
 	if (set_ticker(TIMEVAL) == -1)
 		perror("set_ticker");
 
-
+    pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 	while (1) {
 		flushinp();
 		c = getchar();
