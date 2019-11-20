@@ -92,6 +92,9 @@ int main()
 			{
 				signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
 				clear(); // 화면 없애기
+				standend();
+				scretch_bolder();
+				standout();
                 sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
 				mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
                 mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
