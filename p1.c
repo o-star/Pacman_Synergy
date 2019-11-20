@@ -137,11 +137,11 @@ void move_tower_down(void)
     int row, idx;
     
     standend();
-    for(row = FLOOR, idx = numStackedBlocks; row < TOWERBOTTOM; row++, idx--)
+    for(row = FLOOR, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
         mvaddstr(row, arrBlockPosition[idx], blank);
     
     standout();
-    for(row = FLOOR+1, idx = numStackedBlocks; row < TOWERBOTTOM; row++, idx--)
+    for(row = FLOOR+1, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
         mvaddstr(row, arrBlockPosition[idx], blank);
     
     refresh();
