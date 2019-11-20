@@ -17,6 +17,32 @@
 #define TOWERBOTTOM 20     //화면에서의 제일 아래 블럭 y축위치
 #define MAXVIEWEDBLOCKS 4  //게임중 화면에 보여질 블럭의 개수
 
+
+char* borderary[TOWERBOTTOM+1] = {
+" ____________________________________________________________________ ",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|____________________________________________________________________|"
+};
+
+
 int dir = 1;
 int pos = LEFTEDGE;
 int FLOOR = TOWERBOTTOM;
@@ -32,15 +58,19 @@ void stack_tower();	// 탑이 밑으로 쌓이는 과정
 int can_stack(double);          //탑이 무너지지않게 블럭을 쌓을 수 있는지 체크하는 함수(쌓을 수 있으면 T, 없으면 F 반환)
 void view_stack_cnt();          
 void move_tower_down();         //화면에 일정 개수의 블럭이 쌓이면 탑을 아래로 내려줌 
+void scretch_bolder();		// 게임 창의 테투리 출력
 
 int main()
 {
 	char c;
 	char collapsed[] = "Tower is collapsed!!!!!!!!";
-    char collapsed2[30];
+    	char collapsed2[30];
 	initscr();
 	set_cr_noecho_mode();
 	clear();
+	
+
+	scretch_bolder();
 
 
 	signal(SIGALRM, sig_handler);
@@ -129,7 +159,7 @@ int can_stack(double leftX)
 
 void sig_handler() // 블럭이 좌우로 움직이는 구간
 {
-	move(0, pos);
+	move(1, pos);
 	standend();
 	addstr(blank);
 	pos += dir;
@@ -137,7 +167,7 @@ void sig_handler() // 블럭이 좌우로 움직이는 구간
 		dir = -1;
 	if (pos <= LEFTEDGE)
 		dir = +1;
-	move(0, pos);
+	move(1, pos);
 	standout();
 	addstr(blank);
 	
@@ -183,7 +213,7 @@ void set_cr_noecho_mode()
 
 void stack_tower()
 {
-	int row_pos = 0;
+	int row_pos = 1;
 
 
 	while (1) {
@@ -203,5 +233,16 @@ void stack_tower()
 
 		if (row_pos == FLOOR)
 			break;
+	}
+}
+
+void scretch_bolder(){
+	int i;
+
+	for(i=0; i<TOWERBOTTOM+2; i++){
+		move(i,LEFTEDGE-1);
+		addstr(borderary[i]);
+
+		refresh();
 	}
 }
