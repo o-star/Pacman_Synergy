@@ -14,7 +14,7 @@
 #define LEFTEDGE 20
 #define RIGHTEDGE 80
 #define TOWERBOTTOM 20     //화면에서의 제일 아래 블럭 y축위치
-#define MAXVIEWEDBLOCKS 8  //게임중 화면에 보여질 블럭의 개수
+#define MAXVIEWEDBLOCKS 4  //게임중 화면에 보여질 블럭의 개수
 
 
 char* borderary[TOWERBOTTOM+2] = {
@@ -50,6 +50,7 @@ int flags = TRUE;
 char blank[] = "        ";
 double arrCenterX[100];     //블럭의 무게중심 x좌표들의 배열(인덱스는몇번쨰 블럭인지)
 int arrBlockPosition[100];  //블럭의 왼쪽끝 x좌표들의 배열(인덱스는 몇번째 블럭인지)
+int arrBlockColor[100];      //블럭의 색깔을 보관하는 배열
 int numStackedBlocks = 0;
 
 void sig_handler();
@@ -69,21 +70,27 @@ int main()
 	char collapsed[] = "Tower is collapsed!!!!!!!!";
     char collapsed2[30];
     int reduce_speed_item_cnt=2;
+    int block_color;
+
 	initscr();
 	set_cr_noecho_mode();
 	clear();
-	
+
+    if(has_colors())
+        start_color();
 
 	scretch_bolder();
 
 	signal(SIGALRM, sig_handler);
-	srand(time(NULL));
-
 	if (set_ticker(TIMEVAL) == -1)
 		perror("set_ticker");
 
+	srand(time(NULL));
     pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 	while (1) {
+        block_color = rand() % 7;
+        arrBlockColor[numStackedBlocks+1] = block_color;
+        init_pair(1, COLOR_BLACK, block_color);
 		flushinp();
 		c = getchar();
 		switch (c) {
@@ -95,9 +102,7 @@ int main()
 			{
 				signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
 				clear(); // 화면 없애기
-				standend();
 				scretch_bolder();
-				standout();
                 sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
 				mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
                 mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
@@ -128,7 +133,6 @@ int main()
             break;
 		}
     }
-
 }
 
 
@@ -136,14 +140,15 @@ void move_tower_down(void)
 {
     int row, idx;
     
-    standend();
     for(row = FLOOR, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
         mvaddstr(row, arrBlockPosition[idx], blank);
     
-    standout();
+    attron(A_STANDOUT);
     for(row = FLOOR+1, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
+    {   attron(COLOR_PAIR(1));
         mvaddstr(row, arrBlockPosition[idx], blank);
-    
+    }
+    attroff(A_STANDOUT);
     refresh();
 }
 
@@ -186,7 +191,6 @@ int can_stack(double leftX)
 void sig_handler() // 블럭이 좌우로 움직이는 구간
 {
 	move(1, pos);
-	standend();
 	addstr(blank);
 	pos += dir;
 	if (pos >= RIGHTEDGE)
@@ -195,7 +199,9 @@ void sig_handler() // 블럭이 좌우로 움직이는 구간
 		dir = +1;
 	move(1, pos);
 	standout();
+    attron(COLOR_PAIR(1));
 	addstr(blank);
+    attroff(COLOR_PAIR(1));
 	
 	view_stack_cnt();
 	curs_set(0);
@@ -203,11 +209,9 @@ void sig_handler() // 블럭이 좌우로 움직이는 구간
 }
 
 void view_stack_cnt() {
-
 	char stack_cnt_string[100];
 	sprintf(stack_cnt_string, "Stacked block : %d ", numStackedBlocks);
 	mvaddstr(30, RIGHTEDGE+10, stack_cnt_string);
-
 }
 
 int set_ticker(int n_msecs)
@@ -241,18 +245,17 @@ void stack_tower()
 {
 	int row_pos = 1;
 
-
 	while (1) {
 		move(row_pos, pos);
-		standend();
-
+		//standend();
 		addstr(blank);
-
 		row_pos += 1;
 
 		move(row_pos, pos);
-		standout();
+		//standout();
+        attron(COLOR_PAIR(1) | A_STANDOUT);
 		addstr(blank);
+        attroff(COLOR_PAIR(1)| A_STANDOUT);
 		curs_set(0);
 		refresh();
 		usleep(50000);		// 1초 미만 쉬어줄때 사용
