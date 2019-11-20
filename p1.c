@@ -50,7 +50,6 @@ int flags = TRUE;
 char blank[] = "        ";
 double arrCenterX[100];     //블럭의 무게중심 x좌표들의 배열(인덱스는몇번쨰 블럭인지)
 int arrBlockPosition[100];  //블럭의 왼쪽끝 x좌표들의 배열(인덱스는 몇번째 블럭인지)
-int arrBlockColor[100];      //블럭의 색깔을 보관하는 배열
 int numStackedBlocks = 0;
 
 void sig_handler();
@@ -88,9 +87,8 @@ int main()
 	srand(time(NULL));
     pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 	while (1) {
-        block_color = rand() % 7;
-        arrBlockColor[numStackedBlocks+1] = block_color;
-        init_pair(1, COLOR_BLACK, block_color);
+        block_color = rand() % 6 + 1;
+        init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);
 		flushinp();
 		c = getchar();
 		switch (c) {
@@ -145,10 +143,11 @@ void move_tower_down(void)
     
     attron(A_STANDOUT);
     for(row = FLOOR+1, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
-    {   attron(COLOR_PAIR(1));
+    {
+        attron(A_STANDOUT | COLOR_PAIR(idx));
         mvaddstr(row, arrBlockPosition[idx], blank);
+        attroff(A_STANDOUT | COLOR_PAIR(idx));
     }
-    attroff(A_STANDOUT);
     refresh();
 }
 
@@ -198,11 +197,10 @@ void sig_handler() // 블럭이 좌우로 움직이는 구간
 	if (pos <= LEFTEDGE)
 		dir = +1;
 	move(1, pos);
-	standout();
-    attron(COLOR_PAIR(1));
+    attron(A_STANDOUT | COLOR_PAIR(numStackedBlocks+1));
 	addstr(blank);
-    attroff(COLOR_PAIR(1));
-	
+    attroff(A_STANDOUT | COLOR_PAIR(numStackedBlocks+1));
+
 	view_stack_cnt();
 	curs_set(0);
 	refresh();
@@ -247,15 +245,13 @@ void stack_tower()
 
 	while (1) {
 		move(row_pos, pos);
-		//standend();
 		addstr(blank);
 		row_pos += 1;
 
 		move(row_pos, pos);
-		//standout();
-        attron(COLOR_PAIR(1) | A_STANDOUT);
+        attron(A_STANDOUT | COLOR_PAIR(numStackedBlocks+1));
 		addstr(blank);
-        attroff(COLOR_PAIR(1)| A_STANDOUT);
+        attroff(A_STANDOUT | COLOR_PAIR(numStackedBlocks+1));
 		curs_set(0);
 		refresh();
 		usleep(50000);		// 1초 미만 쉬어줄때 사용
