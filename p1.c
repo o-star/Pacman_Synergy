@@ -13,7 +13,6 @@
 #define FALSE 0
 #define LEFTEDGE 20
 #define RIGHTEDGE 80
-#define TIMEVAL 40
 #define TOWERBOTTOM 20     //화면에서의 제일 아래 블럭 y축위치
 #define MAXVIEWEDBLOCKS 4  //게임중 화면에 보여질 블럭의 개수
 
@@ -42,7 +41,7 @@ char* borderary[TOWERBOTTOM+1] = {
 "|____________________________________________________________________|"
 };
 
-
+int TIMEVAL = 40;
 int dir = 1;
 int pos = LEFTEDGE;
 int FLOOR = TOWERBOTTOM;
@@ -61,6 +60,7 @@ void view_stack_cnt();
 void move_tower_down();         //화면에 일정 개수의 블럭이 쌓이면 탑을 아래로 내려줌 
 void scretch_bolder();		// 게임 창의 테투리 출력
 void reduce_speed(int*);
+void increase_speed();		// 탑이 쌓여갈수록 탑속도를 늘려줌
 
 int main()
 {
@@ -106,14 +106,14 @@ int main()
                 endwin();
                 return 0;
 			}
-            arrBlockPosition[numStackedBlocks] = pos;
+            arrBlockPosition[numStackedBlocks] = pos;	// stack 위치정보 저장
             if(numStackedBlocks > MAXVIEWEDBLOCKS)
                 move_tower_down();
             else
 			    FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
 
 			pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
-			set_ticker(TIMEVAL);
+			increase_speed();
 			flags=TRUE;
 			break;
 
@@ -271,4 +271,12 @@ void scretch_bolder(){
 
 		refresh();
 	}
+}
+
+void increase_speed()
+{
+	if(numStackedBlocks % 5  == 0) 
+		TIMEVAL -= 10;
+		
+	set_ticker(TIMEVAL);
 }
