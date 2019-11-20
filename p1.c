@@ -14,7 +14,7 @@
 #define LEFTEDGE 20
 #define RIGHTEDGE 80
 #define TOWERBOTTOM 20     //화면에서의 제일 아래 블럭 y축위치
-#define MAXVIEWEDBLOCKS 4  //게임중 화면에 보여질 블럭의 개수
+#define MAXVIEWEDBLOCKS 8  //게임중 화면에 보여질 블럭의 개수
 
 
 char* borderary[TOWERBOTTOM+2] = {
@@ -44,7 +44,7 @@ char* borderary[TOWERBOTTOM+2] = {
 
 int TIMEVAL = 40;
 int dir = 1;
-int pos = LEFTEDGE;
+int pos;
 int FLOOR = TOWERBOTTOM;
 int flags = TRUE;
 char blank[] = "        ";
@@ -76,14 +76,13 @@ int main()
 
 	scretch_bolder();
 
-
 	signal(SIGALRM, sig_handler);
 	srand(time(NULL));
 
 	if (set_ticker(TIMEVAL) == -1)
 		perror("set_ticker");
 
-
+    pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 	while (1) {
 		flushinp();
 		c = getchar();
