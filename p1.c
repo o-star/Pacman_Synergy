@@ -17,8 +17,8 @@
 #define MAXVIEWEDBLOCKS 4  //게임중 화면에 보여질 블럭의 개수
 
 
-char* borderary[TOWERBOTTOM+1] = {
-" ____________________________________________________________________ ",
+char* borderary[TOWERBOTTOM+2] = {
+" ==================================================================== ",
 "|                                                                    |",
 "|                                                                    |",
 "|                                                                    |",
@@ -38,7 +38,8 @@ char* borderary[TOWERBOTTOM+1] = {
 "|                                                                    |",
 "|                                                                    |",
 "|                                                                    |",
-"|____________________________________________________________________|"
+"|                                                                    |",
+" ==================================================================== "
 };
 
 int TIMEVAL = 40;
@@ -137,11 +138,11 @@ void move_tower_down(void)
     int row, idx;
     
     standend();
-    for(row = FLOOR, idx = numStackedBlocks; row < TOWERBOTTOM; row++, idx--)
+    for(row = FLOOR, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
         mvaddstr(row, arrBlockPosition[idx], blank);
     
     standout();
-    for(row = FLOOR+1, idx = numStackedBlocks; row < TOWERBOTTOM; row++, idx--)
+    for(row = FLOOR+1, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
         mvaddstr(row, arrBlockPosition[idx], blank);
     
     refresh();
