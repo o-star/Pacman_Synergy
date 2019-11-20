@@ -95,9 +95,7 @@ int main()
 			{
 				signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
 				clear(); // 화면 없애기
-				standend();
 				scretch_bolder();
-				standout();
                 sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
 				mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
                 mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
@@ -136,14 +134,13 @@ void move_tower_down(void)
 {
     int row, idx;
     
-    standend();
     for(row = FLOOR, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
         mvaddstr(row, arrBlockPosition[idx], blank);
     
-    standout();
+    attron(A_STANDOUT);
     for(row = FLOOR+1, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
         mvaddstr(row, arrBlockPosition[idx], blank);
-    
+    attroff(A_STANDOUT);
     refresh();
 }
 
@@ -186,7 +183,6 @@ int can_stack(double leftX)
 void sig_handler() // 블럭이 좌우로 움직이는 구간
 {
 	move(1, pos);
-	standend();
 	addstr(blank);
 	pos += dir;
 	if (pos >= RIGHTEDGE)
@@ -194,8 +190,9 @@ void sig_handler() // 블럭이 좌우로 움직이는 구간
 	if (pos <= LEFTEDGE)
 		dir = +1;
 	move(1, pos);
-	standout();
+    attron(A_STANDOUT);
 	addstr(blank);
+    attroff(A_STANDOUT);
 	
 	view_stack_cnt();
 	curs_set(0);
@@ -244,15 +241,14 @@ void stack_tower()
 
 	while (1) {
 		move(row_pos, pos);
-		standend();
-
 		addstr(blank);
 
 		row_pos += 1;
 
 		move(row_pos, pos);
-		standout();
+        attron(A_STANDOUT);
 		addstr(blank);
+        attroff(A_STANDOUT);
 		curs_set(0);
 		refresh();
 		usleep(50000);		// 1초 미만 쉬어줄때 사용
