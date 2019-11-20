@@ -87,8 +87,8 @@ int main()
 	srand(time(NULL));
     pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 	while (1) {
-        block_color = rand() % 6 + 1;
-        init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);
+        block_color = rand() % 6 + 1;       //랜덤하게 블럭 색깔 정해줌
+        init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);      //각 블럭마다 색깔 정보 등록
 		flushinp();
 		c = getchar();
 		switch (c) {
@@ -100,7 +100,6 @@ int main()
 			{
 				signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
 				clear(); // 화면 없애기
-				scretch_bolder();
                 sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
 				mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
                 mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
