@@ -66,7 +66,8 @@ int main()
 {
 	char c;
 	char collapsed[] = "Tower is collapsed!!!!!!!!";
-    	char collapsed2[30];
+    char collapsed2[30];
+    int reduce_speed_item_cnt=2;
 	initscr();
 	set_cr_noecho_mode();
 	clear();
@@ -126,10 +127,10 @@ int main()
             }
             break;
 		}
+    }
 
-		}
-	}
 }
+
 
 void move_tower_down(void)
 {
