@@ -48,7 +48,6 @@ int pos;
 int FLOOR = TOWERBOTTOM;
 int flags = TRUE;
 char blank[] = "        ";
-char blank_delete[] = "                ";
 double arrCenterX[100];     	//블럭의 무게중심 x좌표들의 배열(인덱스는몇번쨰 블럭인지)
 int arrBlockPosition[100];  	//블럭의 왼쪽끝 x좌표들의 배열(인덱스는 몇번째 블럭인지)
 int numStackedBlocks = 0;
@@ -133,12 +132,12 @@ void set_block_position(int *item){
 		for(i=down_block_cnt+2;i<=numStackedBlocks;i++){
 			other_down_block_position = arrBlockPosition[i];
 			
-            attroff(A_STANDOUT | COLOR_PAIR(i));
             mvaddstr(--row,other_down_block_position,blank);
-            mvaddstr(row,other_down_block_position-2,blank_delete);
+            mvaddstr(row,other_down_block_position-2, blank);
 
 			attron(A_STANDOUT | COLOR_PAIR(i));
 			mvaddstr(row,first_down_block_position,blank);
+            attroff(A_STANDOUT | COLOR_PAIR(i));
 
             arrBlockPosition[i]=first_down_block_position;
 		}
@@ -156,7 +155,7 @@ void initial_screen()
 {
 	char control;
 
-        scretch_bolder();
+    //scretch_bolder();
 	attron(A_BLINK);
 	mvaddstr(LINES/2-7, LEFTEDGE+25, "Press Button !!");
 	attroff(A_BLINK);
@@ -208,12 +207,9 @@ void move_tower_down(void)
 {
     int row, idx;
     
-    attroff(A_STANDOUT| COLOR_PAIR(idx));
-
-    for(row = FLOOR, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--){
+    for(row = FLOOR, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
         mvaddstr(row, arrBlockPosition[idx], blank);
-        mvaddstr(row,arrBlockPosition[idx]-2,blank_delete);
-    }
+    
     for(row = FLOOR+1, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
     {
         attron(A_STANDOUT | COLOR_PAIR(idx));
