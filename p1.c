@@ -48,6 +48,7 @@ int pos;
 int FLOOR = TOWERBOTTOM;
 int flags = TRUE;
 char blank[] = "        ";
+char blank_delete[] = "                ";
 double arrCenterX[100];     	//블럭의 무게중심 x좌표들의 배열(인덱스는몇번쨰 블럭인지)
 int arrBlockPosition[100];  	//블럭의 왼쪽끝 x좌표들의 배열(인덱스는 몇번째 블럭인지)
 int numStackedBlocks = 0;
@@ -129,14 +130,17 @@ void set_block_position(int *item){
 
 	if(*item !=0){
 
-		for(i=down_block_cnt+2;i<=numStackedBlocks-down_block_cnt;i++){
+		for(i=down_block_cnt+2;i<=numStackedBlocks;i++){
 			other_down_block_position = arrBlockPosition[i];
 			
             attroff(A_STANDOUT | COLOR_PAIR(i));
             mvaddstr(--row,other_down_block_position,blank);
+            mvaddstr(row,other_down_block_position-2,blank_delete);
 
 			attron(A_STANDOUT | COLOR_PAIR(i));
 			mvaddstr(row,first_down_block_position,blank);
+
+            arrBlockPosition[i]=first_down_block_position;
 		}
 
 		(*item)--;
@@ -204,17 +208,20 @@ void move_tower_down(void)
 {
     int row, idx;
     
-    for(row = FLOOR, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
+    attroff(A_STANDOUT| COLOR_PAIR(idx));
+
+    for(row = FLOOR, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--){
         mvaddstr(row, arrBlockPosition[idx], blank);
-    
-    attron(A_STANDOUT);
+        mvaddstr(row,arrBlockPosition[idx]-2,blank_delete);
+    }
     for(row = FLOOR+1, idx = numStackedBlocks; row <= TOWERBOTTOM; row++, idx--)
     {
         attron(A_STANDOUT | COLOR_PAIR(idx));
         mvaddstr(row, arrBlockPosition[idx], blank);
         attroff(A_STANDOUT | COLOR_PAIR(idx));
-        down_block_cnt++;
     }
+
+    down_block_cnt++;
     refresh();
 }
 
