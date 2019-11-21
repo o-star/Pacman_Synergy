@@ -51,6 +51,7 @@ char blank[] = "        ";
 double arrCenterX[100];     	//블럭의 무게중심 x좌표들의 배열(인덱스는몇번쨰 블럭인지)
 int arrBlockPosition[100];  	//블럭의 왼쪽끝 x좌표들의 배열(인덱스는 몇번째 블럭인지)
 int numStackedBlocks = 0;
+int down_block_cnt=0;
 
 void sig_handler();
 int set_ticker(int n_msecs);
@@ -65,11 +66,14 @@ void reduce_speed(int*);
 void increase_speed();		// 탑이 쌓여갈수록 탑속도를 늘려줌
 void game_over_view();      //탑 무너져서 게임 끝났을때 나오는 뷰
 void mode_initialize();     //게임 시작 전에 세팅해야할 초기화 함수
+void set_block_position();
+
 
 int main()
 {
 	char c;
     int reduce_speed_item_cnt=2;
+	int set_item_cnt=1;
     int block_color;
 
     mode_initialize();
@@ -110,9 +114,39 @@ int main()
              reduce_speed(&reduce_speed_item_cnt);
             }
             break;
+		case 's':
+			set_block_position(&set_item_cnt);
+			break;
 		}
     }
 }
+
+void set_block_position(int *item){
+
+	int first_down_block_position=arrBlockPosition[down_block_cnt+1];
+	int other_down_block_position,row,i;
+	row = TOWERBOTTOM;
+
+	if(*item !=0){
+
+		for(i=down_block_cnt+2;i<=numStackedBlocks-down_block_cnt;i++){
+			other_down_block_position = arrBlockPosition[i];
+			
+            attroff(A_STANDOUT | COLOR_PAIR(i));
+            mvaddstr(--row,other_down_block_position,blank);
+
+			attron(A_STANDOUT | COLOR_PAIR(i));
+			mvaddstr(row,first_down_block_position,blank);
+		}
+
+		(*item)--;
+		refresh();
+
+	}
+
+}
+
+
 
 void initial_screen()
 {
@@ -179,6 +213,7 @@ void move_tower_down(void)
         attron(A_STANDOUT | COLOR_PAIR(idx));
         mvaddstr(row, arrBlockPosition[idx], blank);
         attroff(A_STANDOUT | COLOR_PAIR(idx));
+        down_block_cnt++;
     }
     refresh();
 }
