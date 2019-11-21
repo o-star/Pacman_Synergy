@@ -130,24 +130,28 @@ int main()
 
 void set_block_position(int *item){
 
-	int first_down_block_position=arrBlockPosition[down_block_cnt+1];
+	int first_down_block_position=arrBlockPosition[1];
 	int other_down_block_position,row,i;
 	row = TOWERBOTTOM;
 
 	if(*item !=0){
 
-		for(i=down_block_cnt+2;i<=numStackedBlocks;i++){
+		for(i=down_block_cnt+1;i<=numStackedBlocks;i++){
 			other_down_block_position = arrBlockPosition[i];
 			
-            mvaddstr(--row,other_down_block_position,blank);
+            mvaddstr(row,other_down_block_position,blank);
             mvaddstr(row,other_down_block_position-2, blank);
 
 			attron(A_STANDOUT | COLOR_PAIR(i));
-			mvaddstr(row,first_down_block_position,blank);
+			mvaddstr(row--,first_down_block_position,blank);
             attroff(A_STANDOUT | COLOR_PAIR(i));
-
-            arrBlockPosition[i]=first_down_block_position;
 		}
+
+        
+        for(i=1;i<=numStackedBlocks;i++){
+            arrBlockPosition[i]=first_down_block_position;
+            arrCenterX[i]=arrCenterX[1];
+        }
 
 		(*item)--;
 		refresh();
