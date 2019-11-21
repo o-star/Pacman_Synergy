@@ -95,21 +95,22 @@ int main()
 			set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
 			stack_tower();
 			if (!can_stack((double)pos))
-            {
-                game_over_view();
-                return 0;
-            }
+			{
+				game_over_view();
+				return 0;
+			}
 
-            arrBlockPosition[numStackedBlocks] = pos;	// stack 위치정보 저장
-            if(numStackedBlocks > MAXVIEWEDBLOCKS)
-                move_tower_down();
-            else
-			    FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
+			arrBlockPosition[numStackedBlocks] = pos;	// stack 위치정보 저장
+            
+			if(numStackedBlocks > MAXVIEWEDBLOCKS)
+				move_tower_down();
+			else
+				FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
 
 			pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 			increase_speed();
 			flags=TRUE;
-            block_color = rand() % 6 + 1;
+			block_color = rand() % 6 + 1;
 			break;
 
 		case 'q':
@@ -382,7 +383,7 @@ void scretch_bolder(){
 
 void increase_speed()
 {
-	if(numStackedBlocks % 5  == 0) 
+	if(numStackedBlocks % 5  == 0 && TIMEVAL>10) 
 		TIMEVAL -= 10;
 		
 	set_ticker(TIMEVAL);
