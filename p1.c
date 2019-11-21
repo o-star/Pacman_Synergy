@@ -48,14 +48,15 @@ int pos;
 int FLOOR = TOWERBOTTOM;
 int flags = TRUE;
 char blank[] = "        ";
-double arrCenterX[100];     //블럭의 무게중심 x좌표들의 배열(인덱스는몇번쨰 블럭인지)
-int arrBlockPosition[100];  //블럭의 왼쪽끝 x좌표들의 배열(인덱스는 몇번째 블럭인지)
+double arrCenterX[100];     	//블럭의 무게중심 x좌표들의 배열(인덱스는몇번쨰 블럭인지)
+int arrBlockPosition[100];  	//블럭의 왼쪽끝 x좌표들의 배열(인덱스는 몇번째 블럭인지)
 int numStackedBlocks = 0;
 
 void sig_handler();
 int set_ticker(int n_msecs);
 void set_cr_noecho_mode();
-void stack_tower();	// 탑이 밑으로 쌓이는 과정
+void initial_screen();		// 초기게임 시작화면 출력
+void stack_tower();		// 탑이 밑으로 쌓이는 과정
 int can_stack(double);          //탑이 무너지지않게 블럭을 쌓을 수 있는지 체크하는 함수(쌓을 수 있으면 T, 없으면 F 반환)
 void view_stack_cnt();          
 void move_tower_down();         //화면에 일정 개수의 블럭이 쌓이면 탑을 아래로 내려줌 
@@ -67,17 +68,18 @@ int main()
 {
 	char c;
 	char collapsed[] = "Tower is collapsed!!!!!!!!";
-    char collapsed2[30];
-    int reduce_speed_item_cnt=2;
-    int block_color;
-
+	char collapsed2[30];
+	int reduce_speed_item_cnt=2;
+	int block_color;
+    	
 	initscr();
 	set_cr_noecho_mode();
 	clear();
 
-    if(has_colors())
-        start_color();
-
+	if(has_colors())
+        	start_color();
+	
+    	initial_screen();
 	scretch_bolder();
 
 	signal(SIGALRM, sig_handler);
@@ -100,13 +102,17 @@ int main()
 			{
 				signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
 				clear(); // 화면 없애기
-                sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
+
+				attron(A_BLINK);
+				sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
 				mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
-                mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
-                refresh();
-				sleep(2);
-                endwin();
-                return 0;
+                		mvaddstr(LINES/2 + 7 , (COLS-strlen(collapsed))/2,collapsed2);
+                		refresh();
+				sleep(3);
+				attroff(A_BLINK);
+                		
+				endwin();
+                		return 0;
 			}
             arrBlockPosition[numStackedBlocks] = pos;	// stack 위치정보 저장
             if(numStackedBlocks > MAXVIEWEDBLOCKS)
@@ -132,6 +138,38 @@ int main()
     }
 }
 
+void initial_screen()
+{
+	char control;
+
+        scretch_bolder();
+	attron(A_BLINK);
+	mvaddstr(LINES/2-7, LEFTEDGE+25, "Press Button !!");
+	attroff(A_BLINK);
+	mvaddstr(LINES/2-5, LEFTEDGE+25, "Game start  : 1");
+	mvaddstr(LINES/2-4, LEFTEDGE+25, "Help        : 2");
+	mvaddstr(LINES/2-3, LEFTEDGE+25, "Score Record: 3");
+	mvaddstr(LINES/2-2, LEFTEDGE+25, "Quit        : q");
+	curs_set(0);
+	
+	refresh();
+
+	while(1){
+		control = getchar();
+		switch(control){
+			case '1':
+				clear();
+				return;
+			case '2':
+				break;
+			case '3':
+				break;
+			case 'q':
+				endwin();
+				exit(0);
+		}
+	}
+}
 
 void move_tower_down(void)
 {
@@ -262,11 +300,11 @@ void stack_tower()
 
 void scretch_bolder(){
 	int i;
+	int bolder = 200;
 
 	for(i=0; i<TOWERBOTTOM+2; i++){
 		move(i,LEFTEDGE-1);
 		addstr(borderary[i]);
-
 		refresh();
 	}
 }
