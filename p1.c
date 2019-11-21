@@ -67,6 +67,7 @@ void increase_speed();		// 탑이 쌓여갈수록 탑속도를 늘려줌
 void game_over_view();      //탑 무너져서 게임 끝났을때 나오는 뷰
 void mode_initialize();     //게임 시작 전에 세팅해야할 초기화 함수
 void set_block_position();
+int get_ok_char(void);     //올바른 입력이 맞는지 확인하는 함수
 
 
 int main()
@@ -74,15 +75,15 @@ int main()
 	char c;
     int reduce_speed_item_cnt=2;
 	int set_item_cnt=1;
-    int block_color;
+    int block_color = rand() % 6 + 1;    //랜덤하게 블럭 색깔 정해줌
 
     mode_initialize();
 
 	while (1) {
-        block_color = rand() % 6 + 1;       //랜덤하게 블럭 색깔 정해줌
         init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);      //각 블럭마다 색깔 정보 등록
 		flushinp();
-		c = getchar();
+		//c = getchar();
+        c = get_ok_char();
 		switch (c) {
 		case ' ': // spaec bar를 눌렸을때, 실행
 
@@ -103,6 +104,7 @@ int main()
 			pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 			increase_speed();
 			flags=TRUE;
+            block_color = rand() % 6 + 1;
 			break;
 
 		case 'q':
@@ -155,7 +157,7 @@ void initial_screen()
 {
 	char control;
 
-    //scretch_bolder();
+    scretch_bolder();
 	attron(A_BLINK);
 	mvaddstr(LINES/2-7, LEFTEDGE+25, "Press Button !!");
 	attroff(A_BLINK);
@@ -309,6 +311,13 @@ void set_cr_noecho_mode()
 	tcsetattr(0, TCSANOW, &ttystate);
 }
 
+int get_ok_char(void)
+{
+    int c;
+    while((c = getchar()) != EOF && strchr("qQrRsS ", c) == NULL);
+    return c;
+}
+
 void stack_tower()
 {
 	int row_pos = 1;
@@ -340,7 +349,9 @@ void game_over_view()
     signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
     clear(); // 화면 없애기
     sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
+    attron(A_BLINK);
 	mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
+    attroff(A_BLINK);
     mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
     mvaddstr(LINES /2 + 9, (COLS - strlen(collapsed)) / 2, collapsed3);
     refresh();
