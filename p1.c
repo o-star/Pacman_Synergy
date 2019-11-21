@@ -155,14 +155,14 @@ void initial_screen()
 {
 	char control;
 
-    //scretch_bolder();
+	scretch_bolder();
 	attron(A_BLINK);
-	mvaddstr(LINES/2-7, LEFTEDGE+25, "Press Button !!");
+	mvaddstr(TOWERBOTTOM/2-3, LEFTEDGE+25, "Press Button !!");
 	attroff(A_BLINK);
-	mvaddstr(LINES/2-5, LEFTEDGE+25, "Game start  : 1");
-	mvaddstr(LINES/2-4, LEFTEDGE+25, "Help        : 2");
-	mvaddstr(LINES/2-3, LEFTEDGE+25, "Score Record: 3");
-	mvaddstr(LINES/2-2, LEFTEDGE+25, "Quit        : q");
+	mvaddstr(TOWERBOTTOM/2-1, LEFTEDGE+25, "Game start  : 1");
+	mvaddstr(TOWERBOTTOM/2  , LEFTEDGE+25, "Help        : 2");
+	mvaddstr(TOWERBOTTOM/2+1, LEFTEDGE+25, "Score Record: 3");
+	mvaddstr(TOWERBOTTOM/2+2, LEFTEDGE+25, "Quit        : q");
 	curs_set(0);
 	
 	refresh();
@@ -334,18 +334,22 @@ void stack_tower()
 void game_over_view()
 {
 	char collapsed[] = "Tower is collapsed!!!!!!!!";
-    char collapsed2[30];
-    char collapsed3[] = "Press any key to exit";
+	char collapsed2[30];
+	char collapsed3[] = "Press any key to exit";
+    
+	signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
+    
+	clear(); // 화면 없애기
+    	scretch_bolder();
 
-    signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
-    clear(); // 화면 없애기
-    sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
-	mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
-    mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
-    mvaddstr(LINES /2 + 9, (COLS - strlen(collapsed)) / 2, collapsed3);
-    refresh();
-    getch();
-    endwin();
+	sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
+	mvaddstr(TOWERBOTTOM / 2-3, (COLS - strlen(collapsed))/2-3, collapsed);
+	mvaddstr(TOWERBOTTOM/2,(COLS-strlen(collapsed))/2-3,collapsed2);
+	mvaddstr(TOWERBOTTOM /2+2, (COLS - strlen(collapsed))/2-3, collapsed3);
+    
+	refresh();
+	getch();
+	endwin();
 }
 
 void scretch_bolder(){
