@@ -102,14 +102,16 @@ int main()
 			{
 				signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
 				clear(); // 화면 없애기
+				
+				scretch_bolder();
 
-				attron(A_BLINK);
 				sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
-				mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
-                		mvaddstr(LINES/2 + 7 , (COLS-strlen(collapsed))/2,collapsed2);
+				attron(A_BLINK);
+				mvaddstr(LINES / 2-7, (COLS - strlen(collapsed))/2 - 3, collapsed);
+                		attroff(A_BLINK);
+				mvaddstr(LINES/2-2 , (COLS-strlen(collapsed))/2,collapsed2);
                 		refresh();
 				sleep(3);
-				attroff(A_BLINK);
                 		
 				endwin();
                 		return 0;
