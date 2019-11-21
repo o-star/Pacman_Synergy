@@ -62,15 +62,59 @@ void move_tower_down();         //화면에 일정 개수의 블럭이 쌓이면
 void scretch_bolder();		// 게임 창의 테투리 출력
 void reduce_speed(int*);
 void increase_speed();		// 탑이 쌓여갈수록 탑속도를 늘려줌
+void game_over_view();      //탑 무너져서 게임 끝났을때 나오는 뷰
+void mode_initialize();     //게임 시작 전에 세팅해야할 초기화 함수
 
 int main()
 {
 	char c;
-	char collapsed[] = "Tower is collapsed!!!!!!!!";
-    char collapsed2[30];
     int reduce_speed_item_cnt=2;
     int block_color;
 
+    mode_initialize();
+
+	while (1) {
+        block_color = rand() % 6 + 1;       //랜덤하게 블럭 색깔 정해줌
+        init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);      //각 블럭마다 색깔 정보 등록
+		flushinp();
+		c = getchar();
+		switch (c) {
+		case ' ': // spaec bar를 눌렸을때, 실행
+
+			set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
+			stack_tower();
+			if (!can_stack((double)pos))
+            {
+                game_over_view();
+                return 0;
+            }
+
+            arrBlockPosition[numStackedBlocks] = pos;	// stack 위치정보 저장
+            if(numStackedBlocks > MAXVIEWEDBLOCKS)
+                move_tower_down();
+            else
+			    FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
+
+			pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+			increase_speed();
+			flags=TRUE;
+			break;
+
+		case 'q':
+			endwin();
+            return 0;
+
+		case 'r': // r을 누르면 블럭속도가 줄어든다 한게임당 2번까지 가능
+            if(flags){ // 블럭을 떨어뜨리기전에 r을 두번눌렀을 때 , 아이템 갯수가 사라지는 것을 방지하기 위한 flags
+             reduce_speed(&reduce_speed_item_cnt);
+            }
+            break;
+		}
+    }
+}
+
+void mode_initialize()
+{
 	initscr();
 	set_cr_noecho_mode();
 	clear();
@@ -86,52 +130,7 @@ int main()
 
 	srand(time(NULL));
     pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
-	while (1) {
-        block_color = rand() % 6 + 1;       //랜덤하게 블럭 색깔 정해줌
-        init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);      //각 블럭마다 색깔 정보 등록
-		flushinp();
-		c = getchar();
-		switch (c) {
-		case ' ': // spaec bar를 눌렸을때, 실행
-
-			set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
-			stack_tower();
-			if (!can_stack((double)pos))
-			{
-				signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
-				clear(); // 화면 없애기
-                sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
-				mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
-                mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
-                refresh();
-				sleep(2);
-                endwin();
-                return 0;
-			}
-            arrBlockPosition[numStackedBlocks] = pos;	// stack 위치정보 저장
-            if(numStackedBlocks > MAXVIEWEDBLOCKS)
-                move_tower_down();
-            else
-			    FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
-
-			pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
-			increase_speed();
-			flags=TRUE;
-			break;
-
-		case 'q':
-			endwin();
-			return 0;
-
-		case 'r': // r을 누르면 블럭속도가 줄어든다 한게임당 2번까지 가능
-            if(flags){ // 블럭을 떨어뜨리기전에 r을 두번눌렀을 때 , 아이템 갯수가 사라지는 것을 방지하기 위한 flags
-             reduce_speed(&reduce_speed_item_cnt);
-            }
-            break;
-		}
-    }
 }
-
 
 void move_tower_down(void)
 {
@@ -258,6 +257,23 @@ void stack_tower()
 		if (row_pos == FLOOR)
 			break;
 	}
+}
+
+void game_over_view()
+{
+	char collapsed[] = "Tower is collapsed!!!!!!!!";
+    char collapsed2[30];
+    char collapsed3[] = "Press any key to exit";
+
+    signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
+    clear(); // 화면 없애기
+    sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
+	mvaddstr(LINES / 2, (COLS - strlen(collapsed)) / 2, collapsed);
+    mvaddstr(LINES/2+7,(COLS-strlen(collapsed))/2,collapsed2);
+    mvaddstr(LINES /2 + 9, (COLS - strlen(collapsed)) / 2, collapsed3);
+    refresh();
+    getch();
+    endwin();
 }
 
 void scretch_bolder(){
