@@ -13,12 +13,17 @@
 #define FALSE 0
 #define LEFTEDGE 20
 #define RIGHTEDGE 80
-#define TOWERBOTTOM 20     //화면에서의 제일 아래 블럭 y축위치
-#define MAXVIEWEDBLOCKS 4  //게임중 화면에 보여질 블럭의 개수
+#define TOWERBOTTOM 25     //화면에서의 제일 아래 블럭 y축위치
+#define MAXVIEWEDBLOCKS 8  //게임중 화면에 보여질 블럭의 개수
 
 
 char* borderary[TOWERBOTTOM+2] = {
 " ==================================================================== ",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
+"|                                                                    |",
 "|                                                                    |",
 "|                                                                    |",
 "|                                                                    |",
@@ -351,10 +356,10 @@ void game_over_view()
     scretch_bolder();
     sprintf(collapsed2,"Stacked block : %d",numStackedBlocks);
     attron(A_BLINK);
-	mvaddstr(TOWERBOTTOM / 2-3, (COLS - strlen(collapsed)) / 2 - 3, collapsed);
+	mvaddstr(TOWERBOTTOM / 2-3, (RIGHTEDGE - strlen(collapsed)) / 2 + 14, collapsed);
     attroff(A_BLINK);
-    mvaddstr(TOWERBOTTOM/2+1,(COLS-strlen(collapsed))/2 - 3,collapsed2);
-    mvaddstr(TOWERBOTTOM/2+3, (COLS - strlen(collapsed)) / 2 - 3, collapsed3);
+    mvaddstr(TOWERBOTTOM/2+1,(RIGHTEDGE-strlen(collapsed))/2 + 18,collapsed2);
+    mvaddstr(TOWERBOTTOM/2+3, (RIGHTEDGE - strlen(collapsed)) / 2 + 16, collapsed3);
     refresh();
     getch();
     endwin();
