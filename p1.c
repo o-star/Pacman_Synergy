@@ -145,6 +145,7 @@ void initial_screen()
 				exit(0);
 		}
 	}
+}
 void mode_initialize()
 {
 	initscr();
