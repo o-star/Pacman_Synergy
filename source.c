@@ -212,10 +212,11 @@ void highscore_screen() {
 	char username[10][10];
     char userscore[10];
 	char c;
-	int cnt = 0;
+	int size,cnt = 0;
 
 	FILE *fp;
 
+    clear();
 	scretch_bolder();
 	fp = fopen("highscore.txt", "r");
 
@@ -225,13 +226,16 @@ void highscore_screen() {
 
 	mvaddstr(TOWERBOTTOM / 2-1, LEFTEDGE + 25, "User name      Score");
 
-	while (fscanf(fp,"%s",username[cnt]) != -1) {
+    for(size=0;size<5;size++){
 
-        if(fscanf(fp,"%s",userscore)!=-1){
-	    	mvaddstr(TOWERBOTTOM / 2 +cnt, LEFTEDGE + 25,username[cnt]);
-            mvaddstr(TOWERBOTTOM / 2+cnt,LEFTEDGE + 35,userscore);
-	    	cnt++;
-    	}
+        if(fscanf(fp,"%s",username[cnt])!=-1){
+            if(fscanf(fp,"%s",userscore)!=-1){    
+	        	mvaddstr(TOWERBOTTOM / 2 +cnt, LEFTEDGE + 25,username[cnt]);
+                mvaddstr(TOWERBOTTOM / 2+cnt,LEFTEDGE + 45,userscore);
+	        	cnt++;
+            }
+        }
+
     }
 
 	curs_set(0);
@@ -241,7 +245,6 @@ void highscore_screen() {
 	while (c = getchar()) {
 		if (c == 'q') {
 			clear();
-			initial_screen();
             break;
 		}
 	}
@@ -414,10 +417,10 @@ void stack_tower()
 void game_over_view()
 {
 	char collapsed[] = "Tower is collapsed!!!!!!!!";
-	char collapsed2[30];
+	char collapsed2[35]=" ";
 	char collapsed3[] = "Press any key to exit";
-    char question[] = "Do you want record your score ?( y or n )";
-    char question2[] = "Write your name";
+    char question[] = "Do you want record your score ?( y or n )  ";
+    char question2[] = "Write your name : ";
     char select;
     char answer[20];
     int insert_index=0;
@@ -425,57 +428,66 @@ void game_over_view()
 	signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다.
 	clear(); // 화면 없애기
 	scretch_bolder();
-	sprintf(collapsed2, "Stacked block : %d", numStackedBlocks);
+	sprintf(collapsed2, "Stacked block : %d  ", numStackedBlocks);
 	attron(A_BLINK);
 	mvaddstr(TOWERBOTTOM / 2 - 3, (RIGHTEDGE - strlen(collapsed)) / 2 + 14, collapsed);
 	attroff(A_BLINK);
-	mvaddstr(TOWERBOTTOM / 2 + 1, (RIGHTEDGE - strlen(collapsed)) / 2 + 18, collapsed2);
-	mvaddstr(TOWERBOTTOM / 2 + 3, (RIGHTEDGE - strlen(collapsed)) / 2 + 16, collapsed3);
-
+	mvaddstr(TOWERBOTTOM / 2 + 2, (RIGHTEDGE - strlen(collapsed)) / 2 + 18, collapsed2);
     refresh();
 
-    if((insert_index=check_highscore())!=0){
-        mvaddstr(TOWERBOTTOM / 2 +6,(RIGHTEDGE - strlen(collapsed))/2+ 18,question);
+    
+    if((insert_index=check_highscore())!=-1){
+        mvaddstr(TOWERBOTTOM / 2 +6,(RIGHTEDGE - strlen(collapsed))/2+ 14,question);
         refresh();
-        
-        while((select=getchar())!=-1){
+        fflush(stdin); 
+        while((select=getch())!=-1){
             
             if(select=='y'){
-                 mvaddstr(TOWERBOTTOM / 2 +8,(RIGHTEDGE - strlen(collapsed))/2+ 18,question2);
+                 mvaddstr(TOWERBOTTOM / 2 +8,(RIGHTEDGE - strlen(collapsed))/2+ 14,question2);
                  refresh();
                  set_echo_mode();
+                 fflush(stdin);
                  scanf("%s",answer);
                  write_highscore(answer,insert_index);
                  set_cr_noecho_mode();
                  highscore_screen();
+                 endwin();
             }
             else if(select=='n'){
                 endwin();
             }
+
+            exit(1);
+        
         }
 
     }
     else{
+    	mvaddstr(TOWERBOTTOM / 2 + 3, (RIGHTEDGE - strlen(collapsed)) / 2 + 16, collapsed3);
+        refresh();
     	getch();
-    	endwin();
+        endwin();
     }
+
 }
 
 void write_highscore(char name[],int insert_index){
 
     FILE *fp;
-    int i=0;
-    fp=fopen("highscore.txt","w");
+    int i,idex=0;
+    fp=fopen("highscore.txt","w+");
 
     for(i=0;i<=user_cnt;i++){
     
         if(i==insert_index){
-            fprintf(fp,"%s   %d\n",name,numStackedBlocks);
+            fprintf(fp,"%s %d\n",name,numStackedBlocks);
         }
-        else
-            fprintf(fp,"%s   %d\n",user_arr[i].username,user_arr[i].score);
+        else{
+            fprintf(fp,"%s %d\n",user_arr[idex].username,user_arr[idex].score);
+            idex++;
+        }
+    
     }
-
     fclose(fp);
 
 }
@@ -492,6 +504,7 @@ int check_highscore(){
         if(numStackedBlocks>user_arr[i].score){
             find_flag=1;
             insert_index=i;
+            break;
         }
     }
 
@@ -499,20 +512,21 @@ int check_highscore(){
         return insert_index;
     }
     else
-        return 0;
+        return -1;
 
 }
 
 void read_userscore(){
 
     FILE *fp;
-    fp=fopen("highscore.txt","wr");
+    fp=fopen("highscore.txt","r");
 
     while(fscanf(fp,"%s",user_arr[user_cnt].username)!=-1){
 
         fscanf(fp,"%d",&user_arr[user_cnt].score);
         user_cnt++;
     }
+
 
     fclose(fp);
 
@@ -531,7 +545,7 @@ void scretch_bolder() {
 
 void increase_speed()
 {
-	if (numStackedBlocks % 5 == 0)
+	if (numStackedBlocks % 5 == 0 && TIMEVAL >10)
 		TIMEVAL -= 10;
 
 	set_ticker(TIMEVAL);
