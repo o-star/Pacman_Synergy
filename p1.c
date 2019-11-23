@@ -8,6 +8,7 @@
 #include <termios.h>
 #include <sys/time.h>
 #include <math.h>
+#include <locale.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -66,6 +67,7 @@ typedef struct user{
 
 user user_arr[11];
 
+void view_game_explanation();
 void sig_handler();
 int set_ticker(int n_msecs);
 void set_cr_noecho_mode();
@@ -92,6 +94,10 @@ int main()
     int reduce_speed_item_cnt = 2;
     int set_item_cnt = 1;
     int block_color = rand() % 6 + 1;    //랜덤하게 블럭 색깔 정해줌
+	
+	setlocale(LC_ALL, "ko_KR.utf8");
+	setlocale(LC_CTYPE, "ko_KR.utf8");	
+	/* 한글출력 깨짐 방지 */
 
     mode_initialize();
 
@@ -184,7 +190,7 @@ void initial_screen()
         mvaddstr(TOWERBOTTOM / 2 - 1, LEFTEDGE + 25, "Game start  : 1");
         mvaddstr(TOWERBOTTOM / 2, LEFTEDGE + 25, "Help        : 2");
         mvaddstr(TOWERBOTTOM / 2 + 1, LEFTEDGE + 25, "Score Record: 3");
-        mvaddstr(TOWERBOTTOM / 2 + 2, LEFTEDGE + 25, "Quit        : q");
+        mvaddstr(TOWERBOTTOM / 2 + 2, LEFTEDGE + 25, "Quit        : Q");
         curs_set(0);
 
         refresh();
@@ -196,8 +202,10 @@ void initial_screen()
                 clear();
                 return;
             }
-            if(control == '2');
-               
+            if(control == '2'){
+	    	view_game_explanation();
+		break;
+	    }
             if(control == '3'){
                 highscore_screen();
                 break;
@@ -208,6 +216,40 @@ void initial_screen()
             }
         }
     }
+}
+
+void view_game_explanation()
+{
+	char c;
+
+	clear();
+	scretch_bolder();
+
+
+	mvaddstr(4, LEFTEDGE + 2, "게임설명 : ");
+        mvaddstr(5, LEFTEDGE + 2, "탑이 무너지지 않게 균형을 맞추어 쌓아가는 게임입니다.");
+	mvaddstr(6, LEFTEDGE + 2, "탑이 많이 쌓여갈수록 탑이 움직이는 속도는 증가합니다.");
+	mvaddstr(7, LEFTEDGE + 2, "탑을 최대한 많이 쌓아 최고기록을 갱신해 보세요 !!");
+        
+	mvaddstr(10, LEFTEDGE + 2, "조작키 설명 : ");
+        mvaddstr(11, LEFTEDGE + 2, "Space bar : 탑 떨어뜨리기");
+	mvaddstr(12, LEFTEDGE + 2, "R : 탑이 좌우로 움직이는 속도를 일시적으로 늦춰주는 아이템 효과");
+	mvaddstr(13, LEFTEDGE + 2, "    본 아이템은 게임당 2회 사용가능");
+	mvaddstr(14,LEFTEDGE + 2, "S : 쌓여있는 탑들을 게임당 1회 재정렬 해주는 아이템 효과");
+	
+	mvaddstr(TOWERBOTTOM, RIGHTEDGE - 20, "Press key [Q] <- 뒤로가기");
+	
+	curs_set(0);
+	refresh();
+
+	while(1){
+		c=getchar();
+
+		if(c == 'q'){
+			clear();
+			break;
+		}
+	}
 }
 
 void highscore_screen() {
@@ -222,11 +264,11 @@ void highscore_screen() {
     clear();
     scretch_bolder();
     fp = fopen("highscore.txt", "r");
+	
+	if(fp == NULL)
+		fp = fopen("highscore.txt", "w");
 
-    attron(A_BLINK);
     mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "< High Score >");
-    attroff(A_BLINK);
-
     mvaddstr(TOWERBOTTOM / 2-1, LEFTEDGE + 25, "User name      Score");
 
     for(size=0;size<5;size++){
@@ -238,7 +280,6 @@ void highscore_screen() {
                 cnt++;
             }
         }
-
     }
 
     curs_set(0);
@@ -519,7 +560,9 @@ void read_userscore(){
 
     FILE *fp;
     fp=fopen("highscore.txt","r+");
-
+	if(fp == NULL)
+		fp=fopen("highscore.txt","w+");
+	
     while(fscanf(fp,"%s",user_arr[user_cnt].username)!=-1){
 
         fscanf(fp,"%d",&user_arr[user_cnt].score);
