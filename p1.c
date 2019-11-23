@@ -281,13 +281,21 @@ void highscore_screen() {
             }
         }
     }
+	
+	mvaddstr(TOWERBOTTOM, RIGHTEDGE - 20, "Press key [Q] <- 뒤로가기");
 
     curs_set(0);
     refresh();
     fclose(fp);
-   
-    sleep(3);
-    clear();
+
+    while(1){
+                c=getchar();
+
+                if(c == 'q'){
+                        clear();
+                        break;
+                }
+        }
 }
 
 void mode_initialize()
