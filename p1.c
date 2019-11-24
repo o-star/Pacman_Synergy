@@ -437,23 +437,23 @@ void sig_handler() // 블럭이 좌우로 움직이는 구간
 void view_stack_and_item_cnt(int numItem1, int numItem2) {
     char stack_cnt_string[100];
     char *sub_border[8] = {
-    "=====================================",
-    "|                                   |",
-    "|                                   |",
-    "|                                   |",
-    "|                                   |",
-    "|                                   |",
-    "|                                   |",
-    "====================================="
+    "===============================",
+    "|                             |",
+    "|                             |",
+    "|                             |",
+    "|                             |",
+    "|                             |",
+    "|                             |",
+    "==============================="
     };
 
     for(int i = 0; i < 8; i++)
         mvaddstr(2+i, RIGHTEDGE + 10, sub_border[i]);
 
     sprintf(stack_cnt_string, "Stacked block : %d ", numStackedBlocks);
-    mvaddstr(4, RIGHTEDGE + 12, stack_cnt_string);
-    mvprintw(6, RIGHTEDGE + 12, "reduce speed item[R]: %d", numItem1);
-    mvprintw(7, RIGHTEDGE + 12, "block set item[S]: %d", numItem2);
+    mvaddstr(4, RIGHTEDGE + 14, stack_cnt_string);
+    mvprintw(6, RIGHTEDGE + 14, "reduce speed item[R]: %d", numItem1);
+    mvprintw(7, RIGHTEDGE + 14, "block set item[S]: %d", numItem2);
     refresh();
 }
 
