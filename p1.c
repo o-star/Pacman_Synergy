@@ -241,7 +241,8 @@ void game_view()
             }
             break;
         case 's':
-            set_block_position(&set_item_cnt);
+            if(numStackedBlocks > 1)
+                set_block_position(&set_item_cnt);
             break;
         }
     }
