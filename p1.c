@@ -172,11 +172,8 @@ void initial_screen()
                 highscore_screen();
                 break;
             }
-            if(control == 'q'){
-                //endwin();
-                //exit(0);
+            if(control == 'q')
                 return;
-           }
         }
     }
 }
@@ -242,7 +239,6 @@ void game_view()
             break;
 
         case 'q':
-          //  endwin();
             signal(SIGALRM, SIG_IGN);
             clear();
             return ;
@@ -297,8 +293,6 @@ void view_game_explanation()
 
 void highscore_screen() {
 
-    //char username[10][10];
-    //char userscore[10];
     char c;
     int size,cnt = 0;
     char line[30];
@@ -315,17 +309,6 @@ void highscore_screen() {
 
     mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "< High Score >");
     mvaddstr(TOWERBOTTOM / 2-1, LEFTEDGE + 25, "User name      Score");
-
-    /*for(size=0;size<5;size++){
-
-        if(fscanf(fp,"%s",username[cnt])!=-1){
-            if(fscanf(fp,"%s",userscore)!=-1){   
-                mvaddstr(TOWERBOTTOM / 2 +cnt, LEFTEDGE + 25,username[cnt]);
-                mvaddstr(TOWERBOTTOM / 2+cnt,LEFTEDGE + 42,userscore);
-                cnt++;
-            }
-        }
-    }*/
 
     for(size = 0; size < 5; size++)
     {
@@ -352,14 +335,11 @@ void highscore_screen() {
     fclose(fp);
 
     while(1){
-                c=getchar();
+        c=getchar();
 
-                if(c == 'q'){
-                        //clear();
-                    return;
-                       // break;
-                }
-        }
+        if(c == 'q')
+            return;
+    }
 }
 
 void move_tower_down(void)
@@ -535,14 +515,10 @@ void show_game_over_comment()
     attroff(A_BLINK);
     mvaddstr(TOWERBOTTOM / 2, (RIGHTEDGE - strlen(collapsed)) / 2 + 18, collapsed2);
     refresh();
-    
-    //return strlen(collapsed);
 }
 
 int game_over_view()
 {
-    //char collapsed[] = "Tower is collapsed!!!!!!!!";
-    //char collapsed2[35]=" ";
     char collapsed3[] = "Press [Q] to quit";
     char question[] = "Do you want to record your score?( y or n )";
     char question2[] = "Write your name : ";
@@ -564,11 +540,12 @@ int game_over_view()
            
             if(select=='y'){
                  mvaddstr(TOWERBOTTOM / 2 + 7,(RIGHTEDGE - strlen(question))/2 + 14,question2);
+                 curs_set(1);
                  refresh();
                  set_echo_mode();
                  fflush(stdin);
-                 //scanf("%s",answer);
                  getnstr(answer, 12);   //최대 12문자까지 받을 수 있음
+                 curs_set(0);
                  write_highscore(answer,insert_index);
                  set_cr_noecho_mode();
                  highscore_screen();
@@ -592,7 +569,6 @@ int show_restart_comment(void)
     char c;
     char question[] = "Do you want to restart a game? ( y or n )";
 
-    //scretch_bolder();
     mvaddstr(TOWERBOTTOM / 2 + 5, (RIGHTEDGE - strlen(question))/2 + 14, question);
     refresh();
     while(1)
@@ -600,7 +576,6 @@ int show_restart_comment(void)
         c = getchar();
         if(c == 'y') return TRUE;
         else if(c == 'n') return FALSE;
-      
     }
 
 }
@@ -611,7 +586,6 @@ void write_highscore(char name[],int insert_index){
     fp=fopen("highscore.txt","w+");
 
     for(i=0;i<=user_cnt;i++){
-   
         if(i==insert_index){
             fprintf(fp,"%s %d\n",name,numStackedBlocks);
         }
@@ -619,10 +593,8 @@ void write_highscore(char name[],int insert_index){
             fprintf(fp,"%s %d\n",user_arr[idex].username,user_arr[idex].score);
             idex++;
         }
-   
     }
     fclose(fp);
-
 }
 
 int check_highscore(){
@@ -646,7 +618,6 @@ int check_highscore(){
     }
     else
         return -1;
-
 }
 
 void read_userscore(){
@@ -661,12 +632,6 @@ void read_userscore(){
 		fp=fopen("highscore.txt","w+");
 	
     user_cnt = 0;
-    /*while(fscanf(fp,"%s",user_arr[user_cnt].username)!=-1){
-
-        fscanf(fp,"%d",&user_arr[user_cnt].score);
-        user_cnt++;
-    }*/
-
     while(1)
     {
         line = user_arr[user_cnt].username;
