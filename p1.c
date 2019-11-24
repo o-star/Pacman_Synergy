@@ -80,7 +80,7 @@ void move_tower_down();         //화면에 일정 개수의 블럭이 쌓이면
 void scretch_bolder();		// 게임 창의 테투리 출력
 void reduce_speed(int*);
 void increase_speed();		// 탑이 쌓여갈수록 탑속도를 늘려줌
-void game_over_view();      //탑 무너져서 게임 끝났을때 나오는 뷰
+int game_over_view();      //탑 무너져서 게임 끝났을때 나오는 뷰
 void set_block_position();
 int get_ok_char(void);     //올바른 입력이 맞는지 확인하는 함수
 void highscore_screen();
@@ -88,6 +88,8 @@ void read_userscore();
 int check_highscore();
 void write_highscore(char[],int);
 void game_view();
+int show_restart_comment();
+void show_game_over_comment();
 
 int main()
 {
@@ -96,7 +98,7 @@ int main()
 	/* 한글출력 깨짐 방지 */
 
     initscr();
-    //set_cr_noecho_mode();
+    set_cr_noecho_mode();
     clear();
 
     if (has_colors())
@@ -179,17 +181,10 @@ void initial_screen()
     }
 }
 
-void game_view()
+void game_mode_initialize(int *item1, int *item2)
 {
-    char c;
-    int reduce_speed_item_cnt = 2;
-    int set_item_cnt = 1;
-    int block_color = rand() % 6 + 1;    //랜덤하게 블럭 색깔 정해줌
-
-
     clear();
     scretch_bolder();
-
     TIMEVAL = INITIALTIMEVAL;
     signal(SIGALRM, sig_handler);
     if (set_ticker(TIMEVAL) == -1)
@@ -200,6 +195,18 @@ void game_view()
     pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
     numStackedBlocks = 0;
     down_block_cnt = 0;
+    
+    *item1 = 2, *item2 = 1;
+}
+
+void game_view()
+{
+    char c;
+    int reduce_speed_item_cnt;
+    int set_item_cnt;
+    int block_color = rand() % 6 + 1;    //랜덤하게 블럭 색깔 정해줌
+
+    game_mode_initialize(&reduce_speed_item_cnt, &set_item_cnt);
 
     while (1) {
         view_stack_and_item_cnt(reduce_speed_item_cnt, set_item_cnt);
@@ -213,8 +220,13 @@ void game_view()
             stack_tower();
             if (!can_stack((double)pos))
             {
-                game_over_view();
-                return ;
+                if(game_over_view())
+                  {
+                      game_mode_initialize(&reduce_speed_item_cnt, &set_item_cnt);
+                      break;
+                  }
+                else
+                    return;
             }
 
             arrBlockPosition[numStackedBlocks] = pos;    // stack 위치정보 저장
@@ -511,62 +523,87 @@ void stack_tower()
     }
 }
 
-void game_over_view()
+void show_game_over_comment()
 {
     char collapsed[] = "Tower is collapsed!!!!!!!!";
     char collapsed2[35]=" ";
-    char collapsed3[] = "Press [Q] to quit";
-    char question[] = "Do you want record your score ?( y or n )  ";
-    char question2[] = "Write your name : ";
-    char select, c;
-    char answer[20];
-    int insert_index=0;
 
-    signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다..
-    clear(); // 화면 없애기
     scretch_bolder();
     sprintf(collapsed2, "Stacked block : %d  ", numStackedBlocks);
     attron(A_BLINK);
     mvaddstr(TOWERBOTTOM / 2 - 3, (RIGHTEDGE - strlen(collapsed)) / 2 + 14, collapsed);
     attroff(A_BLINK);
-    mvaddstr(TOWERBOTTOM / 2 + 2, (RIGHTEDGE - strlen(collapsed)) / 2 + 18, collapsed2);
+    mvaddstr(TOWERBOTTOM / 2, (RIGHTEDGE - strlen(collapsed)) / 2 + 18, collapsed2);
     refresh();
+    
+    //return strlen(collapsed);
+}
 
+int game_over_view()
+{
+    //char collapsed[] = "Tower is collapsed!!!!!!!!";
+    //char collapsed2[35]=" ";
+    char collapsed3[] = "Press [Q] to quit";
+    char question[] = "Do you want to record your score?( y or n )";
+    char question2[] = "Write your name : ";
+    char select, c;
+    char answer[20];
+    int insert_index=0;
+    int restart_flag;
+    char remove[50] = "                                               ";
+
+    signal(SIGALRM, SIG_IGN); // 무시되면, 더이상 블럭이 움직이지 않게 된다..
+    clear(); // 화면 없애기
+    show_game_over_comment();
    
     if((insert_index=check_highscore())!=-1){       //top5안에 드는지 체크
-        mvaddstr(TOWERBOTTOM / 2 +6,(RIGHTEDGE - strlen(collapsed))/2+ 14,question);
+        mvaddstr(TOWERBOTTOM / 2 +5,(RIGHTEDGE - strlen(question))/2 + 14,question);
         refresh();
         fflush(stdin);
         while((select=get_ok_char())!=-1){
            
             if(select=='y'){
-                 mvaddstr(TOWERBOTTOM / 2 +8,(RIGHTEDGE - strlen(collapsed))/2+ 14,question2);
+                 mvaddstr(TOWERBOTTOM / 2 + 7,(RIGHTEDGE - strlen(question))/2 + 14,question2);
                  refresh();
                  set_echo_mode();
                  fflush(stdin);
                  //scanf("%s",answer);
-                 getnstr(answer, 12);
+                 getnstr(answer, 12);   //최대 12문자까지 받을 수 있음
                  write_highscore(answer,insert_index);
                  set_cr_noecho_mode();
                  highscore_screen();
-                 return;
+                 show_game_over_comment();
+                 break;
             }
-            else if(select=='n'){
-                return;
+            else if(select=='n')
+            {
+                mvaddstr(TOWERBOTTOM / 2 + 5, (RIGHTEDGE - strlen(question))/2 + 14, remove);
+                break;
             }
-       
         }
-
     }
-    else{
-        mvaddstr(TOWERBOTTOM / 2 + 4, (RIGHTEDGE - strlen(collapsed)) / 2 + 18, collapsed3);
-        refresh();
-        while((c = getchar()) != 'q');
-            return;
+
+    restart_flag = show_restart_comment();
+    return restart_flag;
+}
+
+int show_restart_comment(void)
+{
+    char c;
+    char question[] = "Do you want to restart a game? ( y or n )";
+
+    //scretch_bolder();
+    mvaddstr(TOWERBOTTOM / 2 + 5, (RIGHTEDGE - strlen(question))/2 + 14, question);
+    refresh();
+    while(1)
+    {
+        c = getchar();
+        if(c == 'y') return TRUE;
+        else if(c == 'n') return FALSE;
+      
     }
 
 }
-
 void write_highscore(char name[],int insert_index){
 
     FILE *fp;
