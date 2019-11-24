@@ -16,6 +16,7 @@
 #define RIGHTEDGE 80
 #define TOWERBOTTOM 25     //화면에서의 제일 아래 블럭 y축위치
 #define MAXVIEWEDBLOCKS 8  //게임중 화면에 보여질 블럭의 개수
+#define INITIALTIMEVAL 40
 
 
 char* borderary[TOWERBOTTOM + 2] = {
@@ -48,7 +49,7 @@ char* borderary[TOWERBOTTOM + 2] = {
     " ==================================================================== "
 };
 
-int TIMEVAL = 40;
+int TIMEVAL = INITIALTIMEVAL;
 int dir = 1;
 int pos;
 int FLOOR = TOWERBOTTOM;
@@ -65,7 +66,7 @@ typedef struct user{
     int score;
 }user;
 
-user user_arr[11];
+user user_arr[100];
 
 void view_game_explanation();
 void sig_handler();
@@ -80,68 +81,30 @@ void scretch_bolder();		// 게임 창의 테투리 출력
 void reduce_speed(int*);
 void increase_speed();		// 탑이 쌓여갈수록 탑속도를 늘려줌
 void game_over_view();      //탑 무너져서 게임 끝났을때 나오는 뷰
-void mode_initialize();     //게임 시작 전에 세팅해야할 초기화 함수
 void set_block_position();
 int get_ok_char(void);     //올바른 입력이 맞는지 확인하는 함수
 void highscore_screen();
 void read_userscore();
 int check_highscore();
 void write_highscore(char[],int);
+void game_view();
 
 int main()
 {
-    char c;
-    int reduce_speed_item_cnt = 2;
-    int set_item_cnt = 1;
-    int block_color = rand() % 6 + 1;    //랜덤하게 블럭 색깔 정해줌
-	
 	setlocale(LC_ALL, "ko_KR.utf8");
 	setlocale(LC_CTYPE, "ko_KR.utf8");	
 	/* 한글출력 깨짐 방지 */
 
-    mode_initialize();
+    initscr();
+    //set_cr_noecho_mode();
+    clear();
 
-    while (1) {
-        init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);      //각 블럭마다 색깔 정보 등록
-        flushinp();
-        c = get_ok_char();
-        switch (c) {
-        case ' ': // spaec bar를 눌렸을때, 실행
+    if (has_colors())
+        start_color();
 
-            set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
-            stack_tower();
-            if (!can_stack((double)pos))
-            {
-                game_over_view();
-                return 0;
-            }
-
-            arrBlockPosition[numStackedBlocks] = pos;    // stack 위치정보 저장
-            if (numStackedBlocks > MAXVIEWEDBLOCKS)
-                move_tower_down();
-            else
-                FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
-
-            pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
-            increase_speed();
-            flags = TRUE;
-            block_color = rand() % 6 + 1;
-            break;
-
-        case 'q':
-            endwin();
-            return 0;
-
-        case 'r': // r을 누르면 블럭속도가 줄어든다 한게임당 2번까지 가능
-            if(flags){ // 블럭을 떨어뜨리기전에 r을 두번눌렀을 때 , 아이템 갯수가 사라지는 것을 방지하기 위한 flags
-                reduce_speed(&reduce_speed_item_cnt);
-            }
-            break;
-        case 's':
-            set_block_position(&set_item_cnt);
-            break;
-        }
-    }
+    initial_screen();
+    endwin();
+    return 0;
 }
 
 void set_block_position(int *item) {
@@ -149,6 +112,7 @@ void set_block_position(int *item) {
     int first_down_block_position = arrBlockPosition[1];
     int other_down_block_position, row, i;
     row = TOWERBOTTOM;
+
 
     if (*item != 0) {
 
@@ -168,15 +132,11 @@ void set_block_position(int *item) {
             arrBlockPosition[i] = first_down_block_position;
             arrCenterX[i] = arrCenterX[1];
         }
-
         (*item)--;
         refresh();
-
     }
 
 }
-
-
 
 void initial_screen()
 {
@@ -199,23 +159,91 @@ void initial_screen()
             control = getchar();
            
             if(control == '1'){
-                clear();
-                return;
+                game_view();
+                break;
             }
             if(control == '2'){
-	    	view_game_explanation();
-		break;
+	    	    view_game_explanation();
+		        break;
 	    }
             if(control == '3'){
                 highscore_screen();
                 break;
             }
             if(control == 'q'){
-                endwin();
-                exit(0);
-            }
+                //endwin();
+                //exit(0);
+                return;
+           }
         }
     }
+}
+
+void game_view()
+{
+    char c;
+    int reduce_speed_item_cnt = 2;
+    int set_item_cnt = 1;
+    int block_color = rand() % 6 + 1;    //랜덤하게 블럭 색깔 정해줌
+
+
+    clear();
+    scretch_bolder();
+
+    TIMEVAL = INITIALTIMEVAL;
+    signal(SIGALRM, sig_handler);
+    if (set_ticker(TIMEVAL) == -1)
+        perror("set_ticker");
+    
+    FLOOR = TOWERBOTTOM;
+    srand(time(NULL));
+    pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+    numStackedBlocks = 0;
+    down_block_cnt = 0;
+
+    while (1) {
+        init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);      //각 블럭마다 색깔 정보 등록
+        flushinp();
+        c = get_ok_char();
+        switch (c) {
+        case ' ': // spaec bar를 눌렸을때, 실행
+
+            set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
+            stack_tower();
+            if (!can_stack((double)pos))
+            {
+                game_over_view();
+                return ;
+            }
+
+            arrBlockPosition[numStackedBlocks] = pos;    // stack 위치정보 저장
+            if (numStackedBlocks > MAXVIEWEDBLOCKS)
+                move_tower_down();
+            else
+                FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
+
+            pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+            increase_speed();
+            flags = TRUE;
+            block_color = rand() % 6 + 1;
+            break;
+
+        case 'q':
+          //  endwin();
+            signal(SIGALRM, SIG_IGN);
+            return ;
+
+        case 'r': // r을 누르면 블럭속도가 줄어든다 한게임당 2번까지 가능
+            if(flags){ // 블럭을 떨어뜨리기전에 r을 두번눌렀을 때 , 아이템 갯수가 사라지는 것을 방지하기 위한 flags
+                reduce_speed(&reduce_speed_item_cnt);
+            }
+            break;
+        case 's':
+            set_block_position(&set_item_cnt);
+            break;
+        }
+    }
+
 }
 
 void view_game_explanation()
@@ -254,10 +282,12 @@ void view_game_explanation()
 
 void highscore_screen() {
 
-    char username[10][10];
-    char userscore[10];
+    //char username[10][10];
+    //char userscore[10];
     char c;
     int size,cnt = 0;
+    char line[30];
+    char *score;
 
     FILE *fp;
 
@@ -271,15 +301,33 @@ void highscore_screen() {
     mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "< High Score >");
     mvaddstr(TOWERBOTTOM / 2-1, LEFTEDGE + 25, "User name      Score");
 
-    for(size=0;size<5;size++){
+    /*for(size=0;size<5;size++){
 
         if(fscanf(fp,"%s",username[cnt])!=-1){
             if(fscanf(fp,"%s",userscore)!=-1){   
                 mvaddstr(TOWERBOTTOM / 2 +cnt, LEFTEDGE + 25,username[cnt]);
-                mvaddstr(TOWERBOTTOM / 2+cnt,LEFTEDGE + 45,userscore);
+                mvaddstr(TOWERBOTTOM / 2+cnt,LEFTEDGE + 42,userscore);
                 cnt++;
             }
         }
+    }*/
+
+    for(size = 0; size < 5; size++)
+    {
+        if(!fgets(line, sizeof(line), fp)) break;
+        line[strlen(line)-1] = '\0';    //개행 문자를 널로 바꿔줌
+        for(int i = strlen(line)-1; i >= 0; i--)
+        {
+            if(line[i] == ' ')
+            {
+                line[i] = '\0';
+                score = &line[i+1];
+                break;
+            }
+        }
+        mvaddstr(TOWERBOTTOM / 2 + cnt, LEFTEDGE + 25, line);
+        mvaddstr(TOWERBOTTOM / 2 + cnt, LEFTEDGE + 42, score);
+        cnt++;
     }
 	
 	mvaddstr(TOWERBOTTOM, RIGHTEDGE - 20, "Press key [Q] <- 뒤로가기");
@@ -292,30 +340,11 @@ void highscore_screen() {
                 c=getchar();
 
                 if(c == 'q'){
-                        clear();
-                        break;
+                        //clear();
+                    return;
+                       // break;
                 }
         }
-}
-
-void mode_initialize()
-{
-    initscr();
-    set_cr_noecho_mode();
-    clear();
-
-    if (has_colors())
-        start_color();
-
-    initial_screen();
-    scretch_bolder();
-
-    signal(SIGALRM, sig_handler);
-    if (set_ticker(TIMEVAL) == -1)
-        perror("set_ticker");
-
-    srand(time(NULL));
-    pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 }
 
 void move_tower_down(void)
@@ -430,6 +459,7 @@ void set_echo_mode(){
 
     tcgetattr(0,&ttystate);
     ttystate.c_lflag |= ECHO;
+    ttystate.c_lflag |= ICANON;
     tcsetattr(0,TCSANOW,&ttystate);
 }
 
@@ -466,10 +496,10 @@ void game_over_view()
 {
     char collapsed[] = "Tower is collapsed!!!!!!!!";
     char collapsed2[35]=" ";
-    char collapsed3[] = "Press any key to exit";
+    char collapsed3[] = "Press [Q] to quit";
     char question[] = "Do you want record your score ?( y or n )  ";
     char question2[] = "Write your name : ";
-    char select;
+    char select, c;
     char answer[20];
     int insert_index=0;
 
@@ -484,7 +514,7 @@ void game_over_view()
     refresh();
 
    
-    if((insert_index=check_highscore())!=-1){
+    if((insert_index=check_highscore())!=-1){       //top5안에 드는지 체크
         mvaddstr(TOWERBOTTOM / 2 +6,(RIGHTEDGE - strlen(collapsed))/2+ 14,question);
         refresh();
         fflush(stdin);
@@ -495,16 +525,15 @@ void game_over_view()
                  refresh();
                  set_echo_mode();
                  fflush(stdin);
-                 scanf("%s",answer);
+                 //scanf("%s",answer);
+                 getnstr(answer, 12);
                  write_highscore(answer,insert_index);
                  set_cr_noecho_mode();
                  highscore_screen();
-                 endwin();
-                 exit(1);
+                 return;
             }
             else if(select=='n'){
-                endwin();
-                exit(1);
+                return;
             }
        
         }
@@ -513,8 +542,8 @@ void game_over_view()
     else{
         mvaddstr(TOWERBOTTOM / 2 + 3, (RIGHTEDGE - strlen(collapsed)) / 2 + 16, collapsed3);
         refresh();
-        getch();
-        endwin();
+        while((c = getchar()) != 'q');
+            return;
     }
 
 }
@@ -567,19 +596,39 @@ int check_highscore(){
 void read_userscore(){
 
     FILE *fp;
+    char *line;
+    int score;
+
     fp=fopen("highscore.txt","r+");
+    
 	if(fp == NULL)
 		fp=fopen("highscore.txt","w+");
 	
-    while(fscanf(fp,"%s",user_arr[user_cnt].username)!=-1){
+    user_cnt = 0;
+    /*while(fscanf(fp,"%s",user_arr[user_cnt].username)!=-1){
 
         fscanf(fp,"%d",&user_arr[user_cnt].score);
         user_cnt++;
+    }*/
+
+    while(1)
+    {
+        line = user_arr[user_cnt].username;
+        if(fgets(line, 100, fp) == NULL) break;
+        for(int i = strlen(line) - 1; i >= 0; i--)
+        {
+            if(line[i] == ' ')
+            {
+                line[i] = '\0';
+                score = atoi(&line[i+1]); 
+                break;
+            }
+        }
+        user_arr[user_cnt].score = score;
+        user_cnt++;
     }
 
-
     fclose(fp);
-
 }
 
 void scretch_bolder() {
