@@ -75,7 +75,7 @@ void set_cr_noecho_mode();
 void initial_screen();        // 초기게임 시작화면 출력
 void stack_tower();        // 탑이 밑으로 쌓이는 과정
 int can_stack(double);          //탑이 무너지지않게 블럭을 쌓을 수 있는지 체크하는 함수(쌓을 수 있으면 T, 없으면 F 반환)
-void view_stack_cnt();          
+void view_stack_and_item_cnt(int, int);          
 void move_tower_down();         //화면에 일정 개수의 블럭이 쌓이면 탑을 아래로 내려줌 
 void scretch_bolder();		// 게임 창의 테투리 출력
 void reduce_speed(int*);
@@ -202,6 +202,7 @@ void game_view()
     down_block_cnt = 0;
 
     while (1) {
+        view_stack_and_item_cnt(reduce_speed_item_cnt, set_item_cnt);
         init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);      //각 블럭마다 색깔 정보 등록
         flushinp();
         c = get_ok_char();
@@ -231,6 +232,7 @@ void game_view()
         case 'q':
           //  endwin();
             signal(SIGALRM, SIG_IGN);
+            clear();
             return ;
 
         case 'r': // r을 누르면 블럭속도가 줄어든다 한게임당 2번까지 가능
@@ -415,15 +417,31 @@ void sig_handler() // 블럭이 좌우로 움직이는 구간
     addstr(blank);
     attroff(A_STANDOUT | COLOR_PAIR(numStackedBlocks + 1));
 
-    view_stack_cnt();
     curs_set(0);
     refresh();
 }
 
-void view_stack_cnt() {
+void view_stack_and_item_cnt(int numItem1, int numItem2) {
     char stack_cnt_string[100];
+    char *sub_border[8] = {
+    "=====================================",
+    "|                                   |",
+    "|                                   |",
+    "|                                   |",
+    "|                                   |",
+    "|                                   |",
+    "|                                   |",
+    "====================================="
+    };
+
+    for(int i = 0; i < 8; i++)
+        mvaddstr(2+i, RIGHTEDGE + 10, sub_border[i]);
+
     sprintf(stack_cnt_string, "Stacked block : %d ", numStackedBlocks);
-    mvaddstr(30, RIGHTEDGE + 10, stack_cnt_string);
+    mvaddstr(4, RIGHTEDGE + 12, stack_cnt_string);
+    mvprintw(6, RIGHTEDGE + 12, "reduce speed item[R]: %d", numItem1);
+    mvprintw(7, RIGHTEDGE + 12, "block set item[S]: %d", numItem2);
+    refresh();
 }
 
 int set_ticker(int n_msecs)
@@ -540,7 +558,7 @@ void game_over_view()
 
     }
     else{
-        mvaddstr(TOWERBOTTOM / 2 + 3, (RIGHTEDGE - strlen(collapsed)) / 2 + 16, collapsed3);
+        mvaddstr(TOWERBOTTOM / 2 + 4, (RIGHTEDGE - strlen(collapsed)) / 2 + 18, collapsed3);
         refresh();
         while((c = getchar()) != 'q');
             return;
