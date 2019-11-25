@@ -72,6 +72,7 @@ void view_game_explanation();
 void sig_handler();
 int set_ticker(int n_msecs);
 void set_cr_noecho_mode();
+void set_echo_and_canon_mode();
 void initial_screen();        // 초기게임 시작화면 출력
 void stack_tower();        // 탑이 밑으로 쌓이는 과정
 int can_stack(double);          //탑이 무너지지않게 블럭을 쌓을 수 있는지 체크하는 함수(쌓을 수 있으면 T, 없으면 F 반환)
@@ -115,7 +116,6 @@ void set_block_position(int *item) {
     int other_down_block_position, row, i;
     row = TOWERBOTTOM;
 
-
     if (*item != 0) {
 
         for (i = down_block_cnt + 1; i <= numStackedBlocks; i++) {
@@ -129,7 +129,6 @@ void set_block_position(int *item) {
             attroff(A_STANDOUT | COLOR_PAIR(i));
         }
 
-
         for (i = 1; i <= numStackedBlocks; i++) {
             arrBlockPosition[i] = first_down_block_position;
             arrCenterX[i] = arrCenterX[1];
@@ -137,7 +136,6 @@ void set_block_position(int *item) {
         (*item)--;
         refresh();
     }
-
 }
 
 void initial_screen()
@@ -254,7 +252,6 @@ void game_view()
             break;
         }
     }
-
 }
 
 void view_game_explanation()
@@ -263,7 +260,6 @@ void view_game_explanation()
 
 	clear();
 	scretch_bolder();
-
 
 	mvaddstr(4, LEFTEDGE + 2, "게임설명 : ");
         mvaddstr(5, LEFTEDGE + 2, "탑이 무너지지 않게 균형을 맞추어 쌓아가는 게임입니다.");
@@ -464,7 +460,7 @@ void set_cr_noecho_mode()
     tcsetattr(0, TCSANOW, &ttystate);
 }
 
-void set_echo_mode(){
+void set_echo_and_canon_mode(){
    
     struct termios ttystate;
 
@@ -542,7 +538,7 @@ int game_over_view()
                  mvaddstr(TOWERBOTTOM / 2 + 7,(RIGHTEDGE - strlen(question))/2 + 14,question2);
                  curs_set(1);
                  refresh();
-                 set_echo_mode();
+                 set_echo_and_canon_mode();
                  fflush(stdin);
                  getnstr(answer, 12);   //최대 12문자까지 받을 수 있음
                  curs_set(0);
