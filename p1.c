@@ -9,6 +9,10 @@
 #include <sys/time.h>
 #include <math.h>
 #include <locale.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -17,6 +21,7 @@
 #define TOWERBOTTOM 25     //화면에서의 제일 아래 블럭 y축위치
 #define MAXVIEWEDBLOCKS 8  //게임중 화면에 보여질 블럭의 개수
 #define INITIALTIMEVAL 40
+#define oops(msg)	{ perror(msg); exit(1); }
 
 
 char* borderary[TOWERBOTTOM + 2] = {
@@ -91,6 +96,8 @@ void write_highscore(char[],int);
 void game_view();
 int show_restart_comment();
 void show_game_over_comment();
+void multi_gameversion();	// 멀티버전 게임 
+
 
 int main()
 {
@@ -147,10 +154,11 @@ void initial_screen()
         attron(A_BLINK);
         mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "Press Button !!");
         attroff(A_BLINK);
-        mvaddstr(TOWERBOTTOM / 2 - 1, LEFTEDGE + 25, "Game start  : 1");
-        mvaddstr(TOWERBOTTOM / 2, LEFTEDGE + 25, "Help        : 2");
-        mvaddstr(TOWERBOTTOM / 2 + 1, LEFTEDGE + 25, "Score Record: 3");
-        mvaddstr(TOWERBOTTOM / 2 + 2, LEFTEDGE + 25, "Quit        : Q");
+        mvaddstr(TOWERBOTTOM / 2 - 1, LEFTEDGE + 25, "Game start   : 1");
+	mvaddstr(TOWERBOTTOM / 2    , LEFTEDGE + 25, "Multi Game   : 2");
+        mvaddstr(TOWERBOTTOM / 2 + 1, LEFTEDGE + 25, "Help         : 3");
+        mvaddstr(TOWERBOTTOM / 2 + 2, LEFTEDGE + 25, "Score Record : 4");
+        mvaddstr(TOWERBOTTOM / 2 + 3, LEFTEDGE + 25, "Quit         : Q");
         curs_set(0);
 
         refresh();
@@ -162,11 +170,15 @@ void initial_screen()
                 game_view();
                 break;
             }
-            if(control == '2'){
-	    	    view_game_explanation();
-		        break;
+	    if(control == '2'){
+	    	multi_gameversion();
+		break;
 	    }
             if(control == '3'){
+	    	view_game_explanation();
+		break;
+	    }
+            if(control == '4'){
                 highscore_screen();
                 break;
             }
@@ -192,6 +204,150 @@ void game_mode_initialize(int *item1, int *item2)
     down_block_cnt = 0;
     
     *item1 = 2, *item2 = 1;
+}
+
+void multi_gameversion()
+{
+	struct sockaddr_in servadd;
+	struct hostent *hp;
+	int sock_id;
+	int message;
+	int first_player = 0;	// 선공 체크
+	int next_player = 0;	// player 순서 check
+
+    char c;
+    int reduce_speed_item_cnt;
+    int set_item_cnt;
+    int block_color = rand() % 6 + 1;    //랜덤하게 블럭 색깔 정해줌
+	
+    	clear();
+	scretch_bolder();
+
+	sock_id = socket(AF_INET, SOCK_STREAM, 0);
+	if(sock_id == -1)
+		oops("socket");
+	bzero(&servadd, sizeof(servadd));
+	hp = gethostbyname("ostar-virtual-machine");
+	if( hp == NULL)
+		oops("hostname");
+	bcopy(hp->h_addr, (struct sockaddr*) &servadd.sin_addr, hp->h_length);
+	servadd.sin_port = htons(13000);
+	servadd.sin_family = AF_INET;
+
+	if(connect(sock_id, (struct sockaddr *)&servadd, sizeof(servadd)) != 0)
+		oops("bind");
+
+	read(sock_id, &message, BUFSIZ);
+	
+	if(message == -1){
+		first_player = 1;
+		attron(A_BLINK);
+        	mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "Wait Your Partner");
+        	attroff(A_BLINK);
+		refresh();
+		read(sock_id, &message, BUFSIZ);
+	} // 대전상대 기다리기
+
+
+	game_mode_initialize(&reduce_speed_item_cnt, &set_item_cnt);
+    while (1) {
+        init_pair(numStackedBlocks + 1, block_color, COLOR_BLACK);      //각 블럭마다 색깔 정보 등록
+        flushinp();
+
+
+	if(next_player == first_player){
+		attron(A_BLINK);
+                mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "Partner Turn! Wait!");
+                attroff(A_BLINK);
+
+		read(sock_id, &message, BUFSIZ);
+		mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "                   ");
+
+		while(pos != message);
+
+		set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
+         	stack_tower();
+
+            	if (!can_stack((double)pos))
+            	{
+			message = -1;
+                        write(sock_id, &message, sizeof(message));
+
+               		if(game_over_view())
+                	{
+                      		game_mode_initialize(&reduce_speed_item_cnt, &set_item_cnt);
+                      		break;
+                  	}
+                	else
+                   		return;
+            	}
+
+            	arrBlockPosition[numStackedBlocks] = pos;    // stack 위치정보 저장
+            	if (numStackedBlocks > MAXVIEWEDBLOCKS)
+                	move_tower_down();
+            	else
+                	FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
+
+            	pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+            	increase_speed();
+            	flags = TRUE;
+            	block_color = rand() % 6 + 1;
+
+		if(next_player == 0)
+			next_player = 1;
+		else
+			next_player = 0;
+		// 다음 순서 지정
+	}
+
+	else{
+	        c = get_ok_char();
+	        switch (c) {
+	        case ' ': // spaec bar를 눌렸을때, 실행
+
+	            set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
+	            stack_tower();
+
+		    write(sock_id, &pos, sizeof(pos));
+	            
+		    if (!can_stack((double)pos))
+	            {
+			message = -1;
+			write(sock_id, &message, sizeof(message));
+
+	                if(game_over_view())
+	                  {
+	                      game_mode_initialize(&reduce_speed_item_cnt, &set_item_cnt);
+	                      break;
+	                  }
+	                else
+	                    return;
+	            }
+
+	            arrBlockPosition[numStackedBlocks] = pos;    // stack 위치정보 저장
+	            if (numStackedBlocks > MAXVIEWEDBLOCKS)
+	                move_tower_down();
+		    else
+	                FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
+	
+	            pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+	            increase_speed();
+	            flags = TRUE;
+	            block_color = rand() % 6 + 1;
+	            break;
+
+	        case 'q':
+	            signal(SIGALRM, SIG_IGN);
+	            clear();
+	            return ;
+		}
+		if(next_player == 0)
+                        next_player = 1;
+                else
+                        next_player = 0;
+                // 다음 순서 지정
+	}
+    }
 }
 
 void game_view()
