@@ -256,18 +256,20 @@ void multi_gameversion()
 
 
 	if(next_player == first_player){
-		pos-=1;			// 시간차 출력을 방지
+		
+		signal(SIGALRM, SIG_IGN);
+
 		attron(A_BLINK);
                 mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "Partner Turn! Wait!");
                 attroff(A_BLINK);
+		refresh();
 
 		read(sock_id, &message, BUFSIZ);
+		pos = message;
 		mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "                   ");
-
-		while(pos != message);
-
+         	
 		set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
-         	stack_tower();
+		stack_tower();
 
             	if (!can_stack((double)pos))
             	{
@@ -291,7 +293,7 @@ void multi_gameversion()
             	else
                 	FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
 
-            	pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE + 1;
+            	pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
             	increase_speed();
             	flags = TRUE;
             	block_color = rand() % 6 + 1;
@@ -304,6 +306,7 @@ void multi_gameversion()
 	}
 
 	else{
+		signal(SIGALRM, sig_handler);
 	        while((c = getchar()) != EOF && strchr("qQ ", c) == NULL);
 
 	        switch (c) {
@@ -335,7 +338,7 @@ void multi_gameversion()
 		    else
 	                FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
 	
-	            pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE - 1;
+	            pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
 	            increase_speed();
 	            flags = TRUE;
 	            block_color = rand() % 6 + 1;
