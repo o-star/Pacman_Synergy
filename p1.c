@@ -256,6 +256,7 @@ void multi_gameversion()
 
 
 	if(next_player == first_player){
+		pos-=1;			// 시간차 출력을 방지
 		attron(A_BLINK);
                 mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "Partner Turn! Wait!");
                 attroff(A_BLINK);
@@ -273,14 +274,16 @@ void multi_gameversion()
 			message = -1;
                         write(sock_id, &message, sizeof(message));
 
-               		if(game_over_view())
-                	{
-                      		game_mode_initialize(&reduce_speed_item_cnt, &set_item_cnt);
-                      		break;
-                  	}
-                	else
-                   		return;
-            	}
+                	mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "You Win!");
+			refresh();
+
+			sleep(2);
+			
+			game_mode_initialize(&reduce_speed_item_cnt, &set_item_cnt);
+			signal(SIGALRM, SIG_IGN);
+			clear();
+            		return;
+		}
 
             	arrBlockPosition[numStackedBlocks] = pos;    // stack 위치정보 저장
             	if (numStackedBlocks > MAXVIEWEDBLOCKS)
@@ -288,7 +291,7 @@ void multi_gameversion()
             	else
                 	FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
 
-            	pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+            	pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE + 1;
             	increase_speed();
             	flags = TRUE;
             	block_color = rand() % 6 + 1;
@@ -301,27 +304,29 @@ void multi_gameversion()
 	}
 
 	else{
-	        c = get_ok_char();
+	        while((c = getchar()) != EOF && strchr("qQ ", c) == NULL);
+
 	        switch (c) {
 	        case ' ': // spaec bar를 눌렸을때, 실행
+		    write(sock_id, &pos, sizeof(pos));
 
 	            set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
 	            stack_tower();
-
-		    write(sock_id, &pos, sizeof(pos));
 	            
 		    if (!can_stack((double)pos))
 	            {
 			message = -1;
 			write(sock_id, &message, sizeof(message));
+			
+                        mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "You Lose");
+			refresh();
 
-	                if(game_over_view())
-	                  {
-	                      game_mode_initialize(&reduce_speed_item_cnt, &set_item_cnt);
-	                      break;
-	                  }
-	                else
-	                    return;
+                        sleep(2);
+			
+			game_mode_initialize(&reduce_speed_item_cnt, &set_item_cnt);
+			signal(SIGALRM, SIG_IGN);
+			clear();
+			return;
 	            }
 
 	            arrBlockPosition[numStackedBlocks] = pos;    // stack 위치정보 저장
@@ -330,11 +335,11 @@ void multi_gameversion()
 		    else
 	                FLOOR -= 1; // 한층이 쌓였으니깐, FLOOR -1을 시킨다.
 	
-	            pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE;
+	            pos = rand() % (RIGHTEDGE - LEFTEDGE) + LEFTEDGE - 1;
 	            increase_speed();
 	            flags = TRUE;
 	            block_color = rand() % 6 + 1;
-	            break;
+		    break;
 
 	        case 'q':
 	            signal(SIGALRM, SIG_IGN);
