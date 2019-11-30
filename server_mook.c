@@ -11,12 +11,12 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 
-#define FDCNT 2
+#define FDCNT 8
 #define PORTNUM 13000 
 #define HOSTLEN 256
 #define oops(msg)	{ perror(msg); exit(1); }
 
-void* client_handler(void *);
+void* room_handler(void *);
 
 typedef struct client{
     int sock_fd[10];
@@ -44,6 +44,7 @@ int main(int ac, char *av[])
 	int write_message;
 	int read_message;
 	int limit_user_cnt;
+    int j;
 
     sock_id = socket( PF_INET, SOCK_STREAM, 0);
 
@@ -94,7 +95,7 @@ int main(int ac, char *av[])
 		}
 
 	
-		write_message=0;
+		write_message=-1;
 		write(tempfd,&write_message,sizeof(write_message));
 		
 
@@ -104,11 +105,12 @@ int main(int ac, char *av[])
 				//strcpy(room_data[room_cnt].ip,inet_ntoa(client_addr.sin_addr));
 
 				printf("Accept sucess\n");
-				printf("accpeted sockfd %d ,client count %d\n",client_data[i].sock_fd,++client_cnt);
+				printf("accpeted sockfd %d ,client count %d\n",room_data[room_cnt].sock_fd[j],++client_cnt);
 
 				if(j==limit_user_cnt-1){
-					 pthread_create(ptid+i,NULL,(void*)room_handler,room_data+i);
+					
 					 room_data[room_cnt].user_cnt=limit_user_cnt;
+                    pthread_create(ptid+room_cnt,NULL,(void*)room_handler,room_data+room_cnt);
 					 room_cnt++;
 					 printf("Make Room.\n");
 				}
@@ -120,10 +122,10 @@ int main(int ac, char *av[])
 	  
     }
          
- }
     close(sock_id);
 
 }
+
 
 
 void* room_handler(void* room){
@@ -140,22 +142,24 @@ void* room_handler(void* room){
 			if(ptr->sock_fd[i]==ptr->sock_fd[turn_cnt]){
 				write_message=1;
 				write(ptr->sock_fd[i],&write_message,sizeof(write_message));
-			}
+                printf("[%d] send role : %d\n",ptr->sock_fd[i],write_message);
+            }
 			else{
 				write_message=2;
 				write(ptr->sock_fd[i],&write_message,sizeof(write_message));
+                printf("[%d] send role : %d\n",ptr->sock_fd[i],write_message);
 			}
 		}
 
 		read(ptr->sock_fd[turn_cnt],&read_message,sizeof(read_message)); 
-
+        printf("[%d] read pos : %d\n",ptr->sock_fd[turn_cnt],read_message);
 		 if(read_message==-1)
                 break;
     
 		for(i=0;i<ptr->user_cnt;i++){
 			if(ptr->sock_fd[i]!=ptr->sock_fd[turn_cnt]){
 				write(ptr->sock_fd[i],&read_message,sizeof(read_message));
-				 printf("[%d] send pos : %d\n",ptr->sock_fd,read_message);
+				 printf("[%d] send pos : %d\n",ptr->sock_fd[i],read_message);
 			}
 		}
 
@@ -164,9 +168,10 @@ void* room_handler(void* room){
             }
             else
                 turn_cnt++;
+            printf("[%d]turn cnt : %d\n",ptr->sock_fd[turn_cnt],turn_cnt);
+            sleep(2);
         } 
-    }
-
+    
 	for(i=0;i<ptr->user_cnt;i++)
 		close(ptr->sock_fd[i]);
 
