@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define PORTNUM 13000 
+#define PORTNUM 12000 
 #define HOSTLEN 256
 #define oops(msg)	{ perror(msg); exit(1); }
 
@@ -17,8 +17,6 @@
 int main(int ac, char *av[])
 {
 	struct sockaddr_in saddr;	/* build our address here	*/
-	struct hostent *hp;		/* this part of our		*/
-	char hostname[HOSTLEN];		/* address			*/
 	int sock_id, sock_fd, sock_fd1;		/* line id, file descriptor	*/
 
 	int message = -1;			// 커뮤니케이션 할 메세지
@@ -28,10 +26,7 @@ int main(int ac, char *av[])
 		oops("socket");
 	bzero((void*)&saddr, sizeof(saddr));
 
-	gethostname(hostname, HOSTLEN);
-	hp = gethostbyname(hostname);
-
-	bcopy((void*) hp->h_addr, (void*) &saddr.sin_addr, hp->h_length);
+	saddr.sin_addr.s_addr = htonl(INADDR_ANY);	// server ip 주소 입력 
 	saddr.sin_port = htons(PORTNUM);
 	saddr.sin_family = AF_INET;
 

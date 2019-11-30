@@ -13,6 +13,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -209,7 +210,6 @@ void game_mode_initialize(int *item1, int *item2)
 void multi_gameversion()
 {
 	struct sockaddr_in servadd;
-	struct hostent *hp;
 	int sock_id;
 	int message;
 	int first_player = 0;	// 선공 체크
@@ -223,19 +223,17 @@ void multi_gameversion()
     	clear();
 	scretch_bolder();
 
-	sock_id = socket(AF_INET, SOCK_STREAM, 0);
+	sock_id = socket(PF_INET, SOCK_STREAM, 0);
 	if(sock_id == -1)
 		oops("socket");
 	bzero(&servadd, sizeof(servadd));
-	hp = gethostbyname("ostar-virtual-machine");
-	if( hp == NULL)
-		oops("hostname");
-	bcopy(hp->h_addr, (struct sockaddr*) &servadd.sin_addr, hp->h_length);
-	servadd.sin_port = htons(13000);
+	
+	servadd.sin_addr.s_addr = inet_addr("192.168.193.152"); // 서버 주소 입력
+	servadd.sin_port = htons(12000);
 	servadd.sin_family = AF_INET;
 
 	if(connect(sock_id, (struct sockaddr *)&servadd, sizeof(servadd)) != 0)
-		oops("bind");
+		oops("connect");
 
 	read(sock_id, &message, BUFSIZ);
 	
