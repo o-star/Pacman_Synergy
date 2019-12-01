@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+#define HOST "ip-172-31-36-126"
 #define TRUE 1
 #define FALSE 0
 #define LEFTEDGE 20
@@ -227,7 +228,7 @@ void multi_gameversion()
     if(sock_id == -1)
         oops("socket");
     bzero(&servadd, sizeof(servadd));
-    hp = gethostbyname("ip-172-31-43-255");
+    hp = gethostbyname(HOST);
     if( hp == NULL)
         oops("hostname");
     bcopy(hp->h_addr, (struct sockaddr*) &servadd.sin_addr, hp->h_length);
@@ -240,7 +241,18 @@ void multi_gameversion()
     read(sock_id, &read_message, BUFSIZ);
 
     if(read_message==-2){
-        write_message=3; // 인원설정
+        int player_num;
+        char str[] = "How many players do you want to play with including you?: ";
+        char remove[] = "                                                            ";
+        mvaddstr(TOWERBOTTOM/2-3, LEFTEDGE + 5, str);
+        refresh();
+        curs_set(1);
+        fflush(stdin);
+        mvscanw(TOWERBOTTOM/2-3, LEFTEDGE+5+strlen(str), "%d", &player_num);
+        mvaddstr(TOWERBOTTOM/2-3, LEFTEDGE+5, remove);
+        refresh();
+        curs_set(0);
+        write_message=player_num; // 인원설정
         write(sock_id, &write_message, sizeof(write_message));
     }
 
@@ -260,20 +272,26 @@ void multi_gameversion()
         flushinp();
 
         if(read_message==1)
+        {
             now_player=1;
+            set_ticker(TIMEVAL);
+            signal(SIGALRM, sig_handler);
+        }
         else if(read_message==2)
+        {
             now_player=2;
+            signal(SIGALRM, SIG_IGN);
+        }
 
         if(now_player==2){
-            pos-=1;			// 시간차 출력을 방지
             attron(A_BLINK);
             mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "Partner Turn! Wait!");
             attroff(A_BLINK);
+            refresh();
 
             read(sock_id, &read_message, BUFSIZ);
+            pos = read_message;
             mvaddstr(TOWERBOTTOM / 2 - 3, LEFTEDGE + 25, "                   ");
-
-            while(pos != read_message);
 
             set_ticker(2000); // 탑이 다 떨어질때 까지의 시간 멈춰두는것
             stack_tower();
