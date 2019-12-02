@@ -13,8 +13,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
-#define HOST "ip-172-31-36-126"
+#define HOST "ip-155-230-35-105"
 #define TRUE 1
 #define FALSE 0
 #define LEFTEDGE 20
@@ -210,7 +211,7 @@ void game_mode_initialize(int *item1, int *item2)
 void multi_gameversion()
 {
     struct sockaddr_in servadd;
-    struct hostent *hp;
+    //struct hostent *hp;
     int sock_id;
     int read_message;
     int write_message;
@@ -228,10 +229,12 @@ void multi_gameversion()
     if(sock_id == -1)
         oops("socket");
     bzero(&servadd, sizeof(servadd));
-    hp = gethostbyname(HOST);
-    if( hp == NULL)
-        oops("hostname");
-    bcopy(hp->h_addr, (struct sockaddr*) &servadd.sin_addr, hp->h_length);
+    //hp = gethostbyname(HOST);
+    //if( hp == NULL)
+    //    oops("hostname");
+    //bcopy(hp->h_addr, (struct sockaddr*) &servadd.sin_addr, hp->h_length);
+    
+    servadd.sin_addr.s_addr = inet_addr("155.230.35.105");
     servadd.sin_port = htons(13000);
     servadd.sin_family = AF_INET;
 

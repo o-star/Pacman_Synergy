@@ -35,10 +35,10 @@ int main(int ac, char *av[])
 {
     struct sockaddr_in client_addr;	/* build our address here	*/
     struct sockaddr_in server_addr;
-    struct hostent *hp;
+    //struct hostent *hp;
     pthread_t ptid[FDCNT]={0}; //FDCNT는 방 갯수
 
-    char hostname[HOSTLEN];		/* address			*/
+    //char hostname[HOSTLEN];		/* address			*/
     int sock_id,tempfd,i;
     int client_addr_size;
 	int write_message;
@@ -53,10 +53,12 @@ int main(int ac, char *av[])
     bzero((void*)&server_addr, sizeof(server_addr));
     bzero((void*)&client_addr,sizeof(client_addr));
 
-    gethostname(hostname, HOSTLEN);
-    hp = gethostbyname(hostname);
+    //gethostname(hostname, HOSTLEN);
+    //hp = gethostbyname(hostname);
 
-    bcopy((void*) hp->h_addr, (void*) &server_addr.sin_addr, hp->h_length);
+    //bcopy((void*) hp->h_addr, (void*) &server_addr.sin_addr, hp->h_length);
+    
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);	// server ip address
     server_addr.sin_port = htons(PORTNUM);
     server_addr.sin_family = AF_INET;
 
