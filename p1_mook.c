@@ -15,7 +15,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-#define HOST "ip-155-230-35-105"
+#define HOST "155.230.35.105"
 #define TRUE 1
 #define FALSE 0
 #define LEFTEDGE 20
@@ -234,7 +234,7 @@ void multi_gameversion()
     //    oops("hostname");
     //bcopy(hp->h_addr, (struct sockaddr*) &servadd.sin_addr, hp->h_length);
     
-    servadd.sin_addr.s_addr = inet_addr("155.230.35.105");
+    servadd.sin_addr.s_addr = inet_addr(HOST);
     servadd.sin_port = htons(13000);
     servadd.sin_family = AF_INET;
 
